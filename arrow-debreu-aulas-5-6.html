@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script><meta name="maxai-mui-classname-prefix" content="injectDocumentStart-2026-06-26T11:22:17.627Z"><script src="chrome-extension://mhnlakgilnojmhinhkckjpncpbhabphi/apps/content-scripts/website/maxai.js"></script><style id="_goober"> .go1475592160{height:0;}.go1671063245{height:auto;}.go1888806478{display:flex;flex-wrap:wrap;flex-grow:1;}@media (min-width:600px){.go1888806478{flex-grow:initial;min-width:288px;}}.go167266335{background-color:#313131;font-size:0.875rem;line-height:1.43;letter-spacing:0.01071em;color:#fff;align-items:center;padding:6px 16px;border-radius:4px;box-shadow:0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12);}.go3162094071{padding-left:20px;}.go3844575157{background-color:#313131;}.go1725278324{background-color:#43a047;}.go3651055292{background-color:#d32f2f;}.go4215275574{background-color:#ff9800;}.go1930647212{background-color:#2196f3;}.go946087465{display:flex;align-items:center;padding:8px 0;}.go703367398{display:flex;align-items:center;margin-left:auto;padding-left:16px;margin-right:-8px;}.go3963613292{width:100%;position:relative;transform:translateX(0);top:0;right:0;bottom:0;left:0;min-width:288px;}.go1141946668{box-sizing:border-box;display:flex;max-height:100%;position:fixed;z-index:1400;height:auto;width:auto;transition:top 300ms ease 0ms,right 300ms ease 0ms,bottom 300ms ease 0ms,left 300ms ease 0ms,max-width 300ms ease 0ms;pointer-events:none;max-width:calc(100% - 40px);}.go1141946668 .notistack-CollapseWrapper{padding:6px 0px;transition:padding 300ms ease 0ms;}@media (max-width:599.95px){.go1141946668{width:100%;max-width:calc(100% - 32px);}}.go3868796639 .notistack-CollapseWrapper{padding:2px 0px;}.go3118922589{top:14px;flex-direction:column;}.go1453831412{bottom:14px;flex-direction:column-reverse;}.go4027089540{left:20px;}@media (min-width:600px){.go4027089540{align-items:flex-start;}}@media (max-width:599.95px){.go4027089540{left:16px;}}.go2989568495{right:20px;}@media (min-width:600px){.go2989568495{align-items:flex-end;}}@media (max-width:599.95px){.go2989568495{right:16px;}}.go4034260886{left:50%;transform:translateX(-50%);}@media (min-width:600px){.go4034260886{align-items:center;}}</style>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+:root {
+  --bg: #1a1a2e;
+  --bg-card: #16213e;
+  --bg-card-hover: #1a2744;
+  --text: #e0e0e0;
+  --text-muted: #8892a4;
+  --accent: #4fc3f7;
+  --accent-dim: #2a6a8a;
+  --correct: #66bb6a;
+  --correct-bg: rgba(102,187,106,0.12);
+  --wrong: #ef5350;
+  --wrong-bg: rgba(239,83,80,0.12);
+  --border: #2a3a5c;
+  --option-bg: #1e2d4a;
+  --option-hover: #253a5e;
+  --progress-bg: #0f1a30;
+  --tag-colors: #4fc3f7 #ab47bc #ff7043 #66bb6a #ffa726 #ec407a #26c6da;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+.container { max-width:800px; margin:0 auto; padding:1.5rem; }
+h1 { text-align:center; margin-bottom:.5rem; font-size:1.6rem; color:var(--accent); }
+.subtitle { text-align:center; color:var(--text-muted); margin-bottom:1.5rem; font-size:.9rem; }
+
+/* File picker */
+.picker { background:var(--bg-card); border:2px dashed var(--border); border-radius:12px; padding:2.5rem; text-align:center; cursor:pointer; transition:border-color .2s; margin-bottom:1.5rem; }
+.picker:hover { border-color:var(--accent); }
+.picker input { display:none; }
+.picker p { color:var(--text-muted); margin-top:.5rem; font-size:.85rem; }
+
+/* Progress */
+.progress-wrap { background:var(--progress-bg); border-radius:8px; height:8px; margin-bottom:1.5rem; overflow:hidden; }
+.progress-bar { height:100%; background:linear-gradient(90deg,var(--accent),#ab47bc); border-radius:8px; transition:width .4s ease; }
+.progress-text { text-align:center; color:var(--text-muted); font-size:.85rem; margin-bottom:1rem; }
+
+/* Question card */
+.card { background:var(--bg-card); border-radius:12px; padding:1.5rem; margin-bottom:1.2rem; border:1px solid var(--border); }
+.card-header { display:flex; align-items:center; gap:.6rem; margin-bottom:1rem; flex-wrap:wrap; }
+.badge { padding:.2rem .7rem; border-radius:20px; font-size:.75rem; font-weight:600; color:#fff; }
+.q-number { color:var(--text-muted); font-size:.85rem; }
+.q-text { font-size:1.05rem; line-height:1.6; margin-bottom:1.2rem; }
+.problem-stem { background:rgba(79,195,247,0.06); border-left:3px solid var(--accent); padding:.8rem 1rem; border-radius:0 8px 8px 0; margin-bottom:1rem; line-height:1.6; }
+
+/* Options */
+.options { display:flex; flex-direction:column; gap:.5rem; }
+.option { display:flex; align-items:flex-start; gap:.7rem; padding:.75rem 1rem; background:var(--option-bg); border:1px solid transparent; border-radius:8px; cursor:pointer; transition:all .15s; line-height:1.5; }
+.option:hover:not(.disabled) { background:var(--option-hover); border-color:var(--accent-dim); }
+.option.disabled { cursor:default; }
+.option .letter { flex-shrink:0; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:var(--border); font-weight:700; font-size:.85rem; }
+.option.selected .letter { background:var(--accent); color:var(--bg); }
+.option.correct { border-color:var(--correct); background:var(--correct-bg); }
+.option.correct .letter { background:var(--correct); color:#fff; }
+.option.wrong { border-color:var(--wrong); background:var(--wrong-bg); }
+.option.wrong .letter { background:var(--wrong); color:#fff; }
+
+/* Explanation */
+.explanation { margin-top:1rem; padding:1rem; background:rgba(79,195,247,0.06); border-radius:8px; border-left:3px solid var(--accent); display:none; line-height:1.6; font-size:.95rem; }
+.explanation.show { display:block; }
+.explanation .ref { color:var(--text-muted); font-size:.85rem; margin-top:.5rem; font-style:italic; }
+
+/* Navigation */
+.nav { display:flex; justify-content:space-between; margin-top:1rem; }
+.btn { padding:.6rem 1.4rem; border:none; border-radius:8px; font-size:.9rem; cursor:pointer; font-weight:600; transition:opacity .15s; }
+.btn:hover { opacity:.85; }
+.btn-primary { background:var(--accent); color:var(--bg); }
+.btn-secondary { background:var(--border); color:var(--text); }
+
+/* Dashboard */
+.dashboard { display:none; }
+.dashboard.show { display:block; }
+.score-ring { width:140px; height:140px; margin:1rem auto; position:relative; }
+.score-ring svg { transform:rotate(-90deg); }
+.score-ring .value { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:1.8rem; font-weight:700; }
+.topic-bar { margin:.4rem 0; }
+.topic-bar .label { display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:.2rem; }
+.topic-bar .bar { height:10px; background:var(--progress-bg); border-radius:5px; overflow:hidden; }
+.topic-bar .bar .fill { height:100%; border-radius:5px; transition:width .6s; }
+.wrong-list { margin-top:1.5rem; }
+.wrong-list .card { border-left:3px solid var(--wrong); }
+.export-btn { margin-top:1rem; text-align:center; }
+
+.hidden { display:none; }
+</style>
+<link id="USE_CHAT_GPT_AI_CONTENT_CSS_LINK_TAG" rel="stylesheet" href="chrome-extension://mhnlakgilnojmhinhkckjpncpbhabphi/content.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&amp;display=swap"><style type="text/css">.transform-component-module_wrapper__SPB86 {
+  position: relative;
+  width: -moz-fit-content;
+  width: fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  overflow: hidden;
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none;
+  margin: 0;
+  padding: 0;
+}
+.transform-component-module_content__FBWxo {
+  display: flex;
+  flex-wrap: wrap;
+  width: -moz-fit-content;
+  width: fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  margin: 0;
+  padding: 0;
+  transform-origin: 0% 0%;
+}
+.transform-component-module_content__FBWxo img {
+  pointer-events: none;
+}
+</style></head>
+<body>
+<div class="container">
+  <h1>Arrow-Debreu — Aulas 5-6</h1>
+  <p class="subtitle">Selecione um arquivo .md para começar • <code>python -m http.server</code></p>
+
+  <div class="picker hidden" id="picker" style="">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg>
+    <p>Clique ou arraste um arquivo .md de quiz</p>
+    <input type="file" id="fileInput" accept=".md">
+  </div>
+
+  <script type="text/quiz" id="embeddedQuiz">
+---
+quiz: "Arrow-Debreu — Aulas 5-6"
+tags:
+  contingentes: "Bens contingentes e R^{LS}"
+  completo: "Mercados completos e equilíbrio AD"
+  sdf: "SDF e equação fundamental"
+  seguro: "Seguro completo e utilidade esperada"
+  tbe: "TBE estendidos"
+  existencia: "Existência (Brouwer/Kakutani)"
+  radner: "Radner e comércio sequencial"
+  incompletos: "Mercados incompletos e Hart"
+  precificacao: "Precificação por não-arbitragem"
+---
+
+## contingentes
+
+Q: No modelo Arrow-Debreu, um "bem contingente" é definido como:
+- Um bem físico indexado pelo estado da natureza em que é entregue
+- Um ativo financeiro que paga dividendos em todos os estados
+- Um bem cujo preço varia com a probabilidade do estado
+- Uma promessa de entrega que independe do estado realizado
+<!-- YW5zOjA= -->
+> Arrow e Debreu reindexam bens: "café na chuva" e "café na seca" são bens distintos. Cada bem é indexado por (mercadoria, estado), e toda a teoria de equilíbrio geral se transporta para esse espaço ampliado.
+> Ref: Aula 5 Bloco 1 "Bem contingente"; N&S Cap 7 §7.2; MWG §19.B
+
+Q: Com $L$ mercadorias físicas e $S$ estados da natureza, o espaço de bens do modelo AD é:
+- $\mathbb{R}^{L+S}$ (mercadorias mais estados)
+- $\mathbb{R}^{L}$ (a incerteza não amplia o espaço)
+- $\mathbb{R}^{S}$ (só importam os estados)
+- $\mathbb{R}^{LS}$ (uma coordenada por par mercadoria-estado)
+<!-- YW5zOjM= -->
+> Cada uma das $L$ mercadorias passa a existir em cada um dos $S$ estados, gerando $L\times S$ bens contingentes. É a ampliação que permite reusar todos os resultados de EG.
+> Ref: Aula 5 Bloco 1 "Estados, bens contingentes, R^{LS}"
+
+Q: A frase "tempo é um caso particular de estado" significa que:
+- O modelo AD ignora a dimensão temporal
+- Preços de equilíbrio não podem depender do tempo
+- Só existe um único período de negociação
+- Datas futuras podem ser indexadas como estados, tratando bens por data como bens por estado
+<!-- YW5zOjM= -->
+> Indexar bens por data é formalmente idêntico a indexá-los por estado; por isso o aparato AD cobre tanto incerteza quanto intertemporalidade com a mesma álgebra.
+> Ref: Aula 5 Bloco 1 "Tempo é caso particular de estado"
+
+## completo
+
+Q: Dizer que o mercado é "completo" no sentido de Arrow-Debreu significa que:
+- Existe um título contingente negociável para cada estado (posto da matriz de payoffs igual a $S$)
+- Todos os agentes têm a mesma informação sobre os estados
+- Os preços dos títulos refletem as probabilidades verdadeiras
+- Não há custos de transação na negociação dos ativos
+<!-- YW5zOjA= -->
+> Completude é uma propriedade do span dos ativos: com $S$ títulos linearmente independentes, qualquer transferência de recursos entre estados é alcançável. Informação simétrica e custo zero são hipóteses auxiliares, não a definição.
+> Ref: Aula 5 Bloco 2 "Mercado completo"; MWG §19.E
+
+Q: Um título de Arrow associado ao estado $s$ paga:
+- 1 unidade em todos os estados
+- 1 unidade no estado $s$ e 0 nos demais
+- $\pi_s$ unidades no estado $s$
+- o valor esperado do payoff agregado
+<!-- YW5zOjE= -->
+> O título de Arrow é o "tijolo elementar": paga 1 só no seu estado. Combinações desses títulos replicam qualquer payoff contingente, o que torna o mercado completo quando há um para cada estado.
+> Ref: Aula 5 Bloco 2; N&S Cap 7
+
+Q: A Lei de Walras estendida ao ambiente Arrow-Debreu afirma que:
+- $q\cdot z(q)\equiv 0$, somando o excesso de demanda sobre todos os $L\times S$ bens contingentes
+- a soma se faz apenas sobre os $L$ bens físicos
+- a soma se faz apenas sobre os $S$ estados
+- ela deixa de valer quando há incerteza
+<!-- YW5zOjA= -->
+> Exatamente como na economia sem incerteza, a exaustão do orçamento (NSL) somada sobre os agentes dá $q\cdot z(q)\equiv 0$ — agora com $q$ e $z$ vivendo em $\mathbb{R}^{LS}$.
+> Ref: Aula 5 Bloco 2 "Lei de Walras estendida"
+
+Q: Com mercados completos e preferências convexas, os Teoremas do Bem-Estar:
+- Falham necessariamente sob qualquer incerteza
+- Valem como na economia sem incerteza (1º e 2º TBE estendidos)
+- Só valem se todos os agentes forem neutros ao risco
+- Exigem que as probabilidades sejam idênticas entre agentes
+<!-- YW5zOjE= -->
+> Como bens contingentes são "bens comuns" em $\mathbb{R}^{LS}$, a prova do 1º TBE se reaproveita (precisa de NSL) e a do 2º também (precisa de convexidade). A incerteza não muda a estrutura.
+> Ref: Aula 5 Bloco 3; J-R §5.5
+
+## sdf
+
+Q: Na UMP com utilidade esperada $\sum_s\pi_s v(c_s)$ e preços de Arrow $q_s$, a condição de primeira ordem interior é:
+- $v'(c_s)=\lambda$ para todo $s$
+- $\pi_s=\lambda\,q_s$ para todo $s$
+- $v'(c_s)=q_s$ para todo $s$
+- $\pi_s\,v'(c_s)=\lambda\,q_s$ para todo $s$
+<!-- YW5zOjM= -->
+> Derivando o Lagrangiano $\sum_s\pi_s v(c_s)-\lambda(\sum_s q_s c_s-W)$ em $c_s$: a utilidade marginal ponderada pela probabilidade iguala o preço de estado vezes o multiplicador.
+> Ref: Aula 5 Bloco 2 "Equação fundamental do SDF"
+
+Q: O fator de desconto estocástico (SDF) que precifica os ativos é:
+- $m_s=\dfrac{\pi_s}{q_s}$
+- $m_s=q_s\,\pi_s$
+- $m_s=v'(c_s)$
+- $m_s=\dfrac{q_s}{\pi_s}$
+<!-- YW5zOjM= -->
+> O SDF é a razão preço de estado / probabilidade. Pela CPO, $m_s=q_s/\pi_s=v'(c_s)/\lambda$: ele carrega a utilidade marginal relativa entre estados.
+> Ref: Aula 5/6 "Equação fundamental do SDF"
+
+Q: A precificação por SDF de um ativo $j$ com payoffs $X_{js}$ é:
+- $q_j=\sum_s \pi_s\,m_s\,X_{js}$
+- $q_j=\sum_s X_{js}$
+- $q_j=\sum_s \pi_s\,X_{js}$
+- $q_j=m_s\,X_{js}$
+<!-- YW5zOjA= -->
+> Preço = valor esperado do payoff ponderado pelo SDF. Equivalentemente $q_j=\sum_s q_s X_{js}$, já que $q_s=\pi_s m_s$. É a fórmula de não-arbitragem.
+> Ref: Aula 6 Bloco 4 "SDF + Euler"
+
+Q: Quando o SDF é constante entre estados ($m_s=\bar m$ para todo $s$), os preços de Arrow são:
+- Iguais a 1 em todos os estados
+- Nulos no estado mais provável
+- Atuarialmente justos ($q_s\propto\pi_s$)
+- Proporcionais ao payoff agregado
+<!-- YW5zOjI= -->
+> $m_s=q_s/\pi_s$ constante implica $q_s=\bar m\,\pi_s$: os preços de estado são proporcionais às probabilidades — a definição de preços atuarialmente justos.
+> Ref: Aula 5 Bloco 2; Aula 6 Bloco 4
+
+## seguro
+
+Q: Com Bernoulli estritamente côncava e preços atuarialmente justos ($q_s=\pi_s$), o consumo contingente ótimo é:
+- Maior no estado de maior probabilidade
+- Igual em todos os estados ($c_s$ constante) — seguro completo
+- Proporcional à probabilidade $\pi_s$ de cada estado
+- Nulo no estado desfavorável
+<!-- YW5zOjE= -->
+> Da CPO $\pi_s v'(c_s)=\lambda q_s$ com $q_s=\pi_s$ vem $v'(c_s)=\lambda$ constante; como $v'$ é estritamente decrescente (injetora), $c_s$ é constante. O agente avesso suaviza o consumo entre estados.
+> Ref: Aula 5 Bloco 4 "Resultado canônico"; MWG §19.C
+
+Q: Por que preços justos levam a $c_s$ constante (Bernoulli côncava estrita)?
+- Porque a probabilidade some da restrição orçamentária
+- A CPO força $v'(c_s)$ constante, e $v'$ injetora implica $c_s$ constante
+- Porque o agente é, na verdade, neutro ao risco
+- Porque a dotação já é igual em todos os estados
+<!-- YW5zOjE= -->
+> O mecanismo é puramente a injetividade de $v'$: utilidade marginal igual entre estados só é possível com consumo igual entre estados. Independe da dotação ser igual.
+> Ref: Aula 5 Bloco 4
+
+Q: Geradora com $v(c)=\ln c$, probabilidades $\pi=(\tfrac34,\tfrac14)$, preços de Arrow justos $q=(\tfrac34,\tfrac14)$ e dotação contingente $\omega=(100,20)$. O consumo ótimo $c^*$ é:
+- $(100,20)$ — mantém a dotação, sem seguro
+- $(60,60)$ — constante, porém abaixo da dotação esperada
+- $(80,80)$ — constante, igual ao valor da dotação a preços $q$
+- $(75,25)$ — proporcional às probabilidades
+<!-- YW5zOjI= -->
+> Log é côncava, preços justos ⟹ $c^*$ constante. O nível sai do orçamento: $q\cdot c=q\cdot\omega=\tfrac34(100)+\tfrac14(20)=80$, e com $c$ constante e $q_1+q_2=1$, $c^*=(80,80)$.
+> Ref: Simulado 1 Q4a; Aula 5 Bloco 4
+
+Q: Mantidas as probabilidades, suponha agora que o título da "seca" fique caro ($q_2>\pi_2$). O agente:
+- Aumenta a cobertura contra a seca acima do pleno
+- Deixa de se segurar plenamente, tolerando consumir menos na seca
+- Mantém $c_s$ constante, ignorando o preço
+- Passa a consumir zero no estado bom
+<!-- YW5zOjE= -->
+> Com $q_2/\pi_2>1$, segurar o estado ruim ficou caro; a CPO dá $v'(c_2)/v'(c_1)=q_2/\pi_2\cdot(\pi_1/q_1)>1$, logo $c_2<c_1$. O seguro deixa de ser completo.
+> Ref: Simulado 1 Q4b; Aula 5
+
+## tbe
+
+Q: O 1º TBE estendido (mercados completos) é demonstrado:
+- Apenas sob neutralidade ao risco dos agentes
+- Via teorema de ponto fixo de Brouwer
+- Reaproveitando a prova sem incerteza, tratando os bens contingentes como bens comuns
+- Somente no caso de exatamente dois estados
+<!-- YW5zOjI= -->
+> Em $\mathbb{R}^{LS}$ o equilíbrio AD é um equilíbrio walrasiano usual; a contradição do 1º TBE (com NSL) vale linha a linha. Nada de novo é exigido além de completude.
+> Ref: Aula 5 Bloco 3 "1º TBE — prova reaproveitada"
+
+Q: Além de mercados completos, o 2º TBE estendido requer crucialmente:
+- Neutralidade ao risco de todos os agentes
+- Convexidade das preferências (sobre planos contingentes em $\mathbb{R}^{LS}$)
+- Probabilidades idênticas entre os agentes
+- Exatamente dois bens físicos
+<!-- YW5zOjE= -->
+> Como sempre, descentralizar uma alocação eficiente por preços lineares exige convexidade (hiperplano separador). A novidade é apenas que a convexidade é avaliada em $\mathbb{R}^{LS}$.
+> Ref: Aula 5 Bloco 3 "2º TBE estendido"
+
+Q: A eficiência de Pareto no equilíbrio Arrow-Debreu é avaliada:
+- Ex-ante, sobre os planos de consumo contingente (antes de o estado se realizar)
+- Ex-post, estado a estado, após a realização
+- Apenas no estado efetivamente realizado
+- Ignorando as probabilidades dos estados
+<!-- YW5zOjA= -->
+> AD é uma economia de planos contingentes negociados em $t=0$; a eficiência é ex-ante, em utilidade esperada. Ex-post, um estado azarado pode parecer "ineficiente", mas o plano era eficiente ex-ante.
+> Ref: Aula 5 Bloco 3
+
+## existencia
+
+Q: O Teorema de Brouwer garante que:
+- O equilíbrio walrasiano é único
+- Todo equilíbrio é Pareto-eficiente
+- O núcleo de uma economia de trocas é não-vazio
+- Toda função contínua de um simplex (compacto convexo) nele mesmo tem ponto fixo
+<!-- YW5zOjM= -->
+> Brouwer é a ferramenta topológica da existência: continuidade + domínio compacto convexo garantem $f(x^*)=x^*$. Unicidade e eficiência são questões distintas.
+> Ref: Aula 6 Bloco 1 "Brouwer (1911)"
+
+Q: Na prova de existência de equilíbrio walrasiano, o ponto fixo da aplicação no simplex de preços corresponde a:
+- Uma alocação Pareto-eficiente qualquer
+- A dotação inicial dos agentes
+- Um vetor de preços que zera o excesso de demanda agregada
+- O centro do núcleo da economia
+<!-- YW5zOjI= -->
+> Constrói-se $f:\Delta\to\Delta$ que empurra o preço na direção do excesso positivo; no ponto fixo o preço não se move, logo $z(p^*)=0$ (usando Walras e homogeneidade).
+> Ref: Aula 6 Bloco 1 "Sketch — existência em economia AD"
+
+Q: Passa-se de Brouwer para Kakutani quando:
+- Há apenas um bem na economia
+- A demanda é uma correspondência (multivalorada), e.g., preferências não estritamente convexas
+- As preferências são sempre lineares
+- Não há incerteza no modelo
+<!-- YW5zOjE= -->
+> Sem convexidade estrita a demanda pode ser um conjunto, não um ponto; Kakutani estende o ponto fixo a correspondências de valor convexo e gráfico fechado.
+> Ref: Aula 6 Bloco 1 "Quando Brouwer falha — Kakutani"
+
+## radner
+
+Q: O equilíbrio de Radner descreve uma economia em que:
+- Negocia-se sequencialmente — ativos financeiros primeiro, bens à vista em cada estado depois
+- Tudo é negociado num único leilão à vista
+- Os mercados são incompletos por definição
+- Não há ativos financeiros, só bens contingentes
+<!-- YW5zOjA= -->
+> Radner é a versão "realista": em vez de um mercado AD que abre todos os contratos em $t=0$, há um número pequeno de ativos negociados e depois mercados spot. A pergunta é quando isso replica AD.
+> Ref: Aula 6 Bloco 2 "Setup formal de Radner"
+
+Q: A equivalência entre equilíbrio Arrow-Debreu e equilíbrio de Radner vale quando:
+- A matriz de payoffs dos ativos tem posto completo (gera $\mathbb{R}^S$)
+- Existe um único ativo negociável
+- Todos os agentes são neutros ao risco
+- Há no máximo dois estados da natureza
+<!-- YW5zOjA= -->
+> Se os ativos geram todo o $\mathbb{R}^S$, qualquer transferência contingente é replicável por carteira; aí a sequência de restrições de Radner equivale à única restrição AD.
+> Ref: Aula 6 Bloco 2 "Equivalência AD↔Radner"
+
+Q: Sob a equivalência (posto completo), a sequência de restrições orçamentárias de Radner:
+- É sempre mais restritiva que a de AD
+- Permite estritamente mais consumo que AD
+- Independe dos preços dos ativos
+- Colapsa na única restrição orçamentária de Arrow-Debreu, dando a mesma alocação
+<!-- YW5zOjM= -->
+> Com span completo, a carteira que financia qualquer plano contingente existe e seu custo é exatamente o preço AD daquele plano; as restrições se fundem e o conjunto factível coincide.
+> Ref: Aula 6 Bloco 2 "Equivalência — sketch"
+
+## incompletos
+
+Q: Um mercado é incompleto quando:
+- Não existe nenhum ativo financeiro
+- Há custos de transação positivos
+- O posto da matriz de ativos é menor que $S$ — nem todo risco é segurável
+- Os preços de equilíbrio não existem
+<!-- YW5zOjI= -->
+> Incompletude é deficiência de span: faltam ativos para alcançar alguns padrões de transferência entre estados. Resta risco residual não-diversificável.
+> Ref: Aula 6 Bloco 3 "Mercado incompleto"
+
+Q: Hart (1975) mostrou que, em mercados incompletos, abrir um novo mercado de ativos:
+- Sempre melhora a eficiência
+- Pode piorar todos os agentes (Pareto), pois altera os preços relativos dos ativos existentes
+- Nunca tem efeito algum sobre o equilíbrio
+- Viola a Lei de Walras
+<!-- YW5zOjE= -->
+> A intuição "mais mercados, melhor" falha: como o equilíbrio incompleto não é eficiente, mudanças no conjunto de ativos têm efeitos de preço de segunda ordem que podem prejudicar a todos (reforçado por Geanakoplos-Polemarchakis, 1986).
+> Ref: Aula 6 Bloco 3 "Hart (1975)"
+
+Q: O equilíbrio com mercados incompletos é, no melhor caso:
+- Sempre Pareto-eficiente, como em AD
+- Inexistente em geral
+- Pareto-restrito (constrained efficient), não Pareto-eficiente pleno
+- Eficiente apenas com exatamente dois estados
+<!-- YW5zOjI= -->
+> Dado o conjunto limitado de ativos, o equilíbrio é o melhor possível "restrito" a esse span, mas em geral há ineficiência relativa ao ótimo de mercados completos.
+> Ref: Aula 6 Bloco 3 "constrained PE"
+
+## precificacao
+
+Q: Mercado completo, dois estados. Título $X$ paga $(3,1)$ e custa $1{,}90$; título $Y$ paga $(1,2)$ e custa $1{,}30$. Um contrato $Z$ paga $(10,30)$. Por não-arbitragem, o preço de $Z$ é:
+- $18$
+- $19$
+- $17$
+- $16$
+<!-- YW5zOjI= -->
+> Extraia os preços de estado de $3q_1+q_2=1{,}90$ e $q_1+2q_2=1{,}30$: $q_1=0{,}50,\ q_2=0{,}40$. Logo $P_Z=10(0{,}50)+30(0{,}40)=17$. (18 usa a média $q_1=q_2=0{,}45$; 19 troca os payoffs de estado.)
+> Ref: Simulado 3 Q3b; Aula 6 Bloco 4
+
+Q: Os preços de estado (Arrow) implícitos num conjunto de ativos são únicos se, e somente se:
+- Os agentes são avessos ao risco
+- As probabilidades verdadeiras são conhecidas
+- Existem ao menos dois ativos quaisquer
+- O mercado é completo (a matriz de payoffs tem posto $S$)
+<!-- YW5zOjM= -->
+> Com posto $S$, o sistema $X q = \text{preços}$ tem solução única $q$; faltando posto, há um subespaço de preços de estado compatíveis (preço não-único de payoffs fora do span).
+> Ref: Aula 6 Bloco 4; precificação por não-arbitragem
+
+Q: A equação de Euler intertemporal escreve o SDF como:
+- $m_{t+1}=\beta\,\dfrac{u'(c_{t+1})}{u'(c_t)}$, com $1=\mathbb{E}_t[m_{t+1}R_{t+1}]$
+- $m_{t+1}=\dfrac{u'(c_t)}{u'(c_{t+1})}$, sem desconto
+- $m_{t+1}=\beta$ (constante, independente do consumo)
+- $m_{t+1}=R_{t+1}$ (o próprio retorno bruto)
+<!-- YW5zOjA= -->
+> O SDF intertemporal é a taxa marginal de substituição descontada $\beta u'(c_{t+1})/u'(c_t)$; a condição de não-arbitragem $1=\mathbb{E}_t[m_{t+1}R_{t+1}]$ precifica qualquer retorno.
+> Ref: Aula 6 Bloco 4 "Equação de Euler intertemporal"
+
+</script>
+  <script type="text/quiz-state" id="embeddedState">
+{"current":0,"answers":{}}
+</script>
+
+  <div id="quizArea" class="">
+    <div class="progress-text" id="progressText">Questão 1 de 30 (0 respondidas)</div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width: 0%;"></div></div>
+    <div id="questionContainer"><div class="card"><div class="card-header"><span class="badge" style="background:#4fc3f7">contingentes</span><span class="q-number">#1</span></div><div class="q-text">No modelo Arrow-Debreu, um "bem contingente" é definido como:
+</div><div class="options"><div class="option" onclick="selectOption(0)"><span class="letter">A</span><span>Um bem físico indexado pelo estado da natureza em que é entregue
+</span></div><div class="option" onclick="selectOption(1)"><span class="letter">B</span><span>Um ativo financeiro que paga dividendos em todos os estados
+</span></div><div class="option" onclick="selectOption(2)"><span class="letter">C</span><span>Um bem cujo preço varia com a probabilidade do estado
+</span></div><div class="option" onclick="selectOption(3)"><span class="letter">D</span><span>Uma promessa de entrega que independe do estado realizado
+</span></div></div><div class="explanation ">Arrow e Debreu reindexam bens: "café na chuva" e "café na seca" são bens distintos. Cada bem é indexado por (mercadoria, estado), e toda a teoria de equilíbrio geral se transporta para esse espaço ampliado.
+<div class="ref">📚 Aula 5 Bloco 1 "Bem contingente"; N&amp;S Cap 7 §7.2; MWG §19.B
+</div></div></div></div>
+    <div class="nav">
+      <button class="btn btn-secondary" id="prevBtn" onclick="navigate(-1)" disabled="">← Anterior</button>
+      <button class="btn btn-secondary" onclick="exportStandaloneHTML()" title="Exportar como HTML independente" style="font-size:.8rem;padding:.5rem .8rem;">💾 HTML</button>
+      <button class="btn btn-primary" id="nextBtn" onclick="navigate(1)">Próxima →</button>
+    </div>
+  </div>
+
+  <div class="dashboard" id="dashboard">
+    <h2 style="text-align:center;margin-bottom:1rem;">Resultado Final</h2>
+    <div class="score-ring" id="scoreRing"></div>
+    <div id="topicBars"></div>
+    <div class="wrong-list" id="wrongList"></div>
+    <div class="export-btn">
+      <button class="btn btn-primary" onclick="exportResults()">📋 Copiar resultado (JSON)</button>
+      <button class="btn btn-secondary" onclick="exportStandaloneHTML()" style="margin-left:.5rem;">💾 Exportar HTML</button>
+      <button class="btn btn-secondary" onclick="restart()" style="margin-left:.5rem;">↻ Reiniciar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LETTERS = 'ABCDEFGHIJ';
+const TAG_COLORS = ['#4fc3f7','#ab47bc','#ff7043','#66bb6a','#ffa726','#ec407a','#26c6da','#78909c'];
+let quiz = { title:'', tags:{}, questions:[] };
+let state = { current:0, answers:{} };
+let storageKey = '';
+
+let quizMdSource = '';
+
+const picker = document.getElementById('picker');
+const fileInput = document.getElementById('fileInput');
+picker.addEventListener('click', () => fileInput.click());
+picker.addEventListener('dragover', e => { e.preventDefault(); picker.style.borderColor='var(--accent)'; });
+picker.addEventListener('dragleave', () => { picker.style.borderColor=''; });
+picker.addEventListener('drop', e => { e.preventDefault(); picker.style.borderColor=''; if(e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => { if(e.target.files[0]) loadFile(e.target.files[0]); });
+
+function loadFile(file) {
+  storageKey = 'quiz_' + file.name;
+  const reader = new FileReader();
+  reader.onload = e => { quizMdSource = e.target.result; parseQuiz(quizMdSource); startQuiz(); };
+  reader.readAsText(file);
+}
+
+(function autoStart() {
+  const embedded = document.getElementById('embeddedQuiz');
+  const embeddedState = document.getElementById('embeddedState');
+  if (embedded && embedded.textContent.trim()) {
+    quizMdSource = embedded.textContent;
+    storageKey = 'quiz_embedded_' + quizMdSource.length;
+    parseQuiz(quizMdSource);
+    if (embeddedState && embeddedState.textContent.trim()) {
+      try { const s = JSON.parse(embeddedState.textContent); if (s.answers) state = s; } catch(e) {}
+    }
+    startQuiz();
+  }
+})();
+
+function parseQuiz(md) {
+  quiz = { title:'Quiz', tags:{}, questions:[] };
+  const fmMatch = md.match(/^---\s*\n([\s\S]*?)\n---/);
+  if (fmMatch) {
+    const fm = fmMatch[1];
+    const titleM = fm.match(/quiz:\s*"([^"]+)"/);
+    if (titleM) quiz.title = titleM[1];
+    const tagsBlock = fm.match(/tags:\s*\n((?:\s+\S.*\n)*)/);
+    if (tagsBlock) {
+      for (const line of tagsBlock[1].split('\n')) {
+        const m = line.match(/^\s+(\S+):\s*"([^"]+)"/);
+        if (m) quiz.tags[m[1]] = m[2];
+      }
+    }
+  }
+
+  const body = fmMatch ? md.slice(fmMatch[0].length) : md;
+  let currentTag = '';
+  let currentProblem = null;
+  const lines = body.split('\n');
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (line.match(/^##\s+(\S+)/)) {
+      currentTag = line.match(/^##\s+(\S+)/)[1];
+      currentProblem = null;
+      i++; continue;
+    }
+
+    if (line.match(/^P:\s*/)) {
+      let stem = line.replace(/^P:\s*/, '').trim();
+      i++;
+      while (i < lines.length && !lines[i].match(/^[QP]:\s/) && !lines[i].match(/^##\s/) && !lines[i].match(/^---/)) {
+        if (lines[i].trim()) stem += (stem ? '\n' : '') + lines[i];
+        i++;
+      }
+      currentProblem = stem || null;
+      continue;
+    }
+
+    if (line.match(/^Q:\s*/)) {
+      let qText = line.replace(/^Q:\s*/, '');
+      i++;
+      while (i < lines.length && !lines[i].match(/^-\s/) && !lines[i].match(/^<!--/) && lines[i].trim()) {
+        qText += ' ' + lines[i].trim();
+        i++;
+      }
+
+      const options = [];
+      while (i < lines.length && lines[i].match(/^-\s/)) {
+        options.push(lines[i].replace(/^-\s+/, ''));
+        i++;
+      }
+
+      let correct = 0;
+      if (i < lines.length && lines[i].match(/^<!--\s*/)) {
+        const enc = lines[i].match(/<!--\s*(\S+)\s*-->/);
+        if (enc) {
+          try { const decoded = atob(enc[1]); const m = decoded.match(/ans:(\d+)/); if(m) correct = parseInt(m[1]); } catch(e) {}
+        }
+        i++;
+      }
+
+      let explanation = '', ref = '', similar = '';
+      while (i < lines.length && lines[i].match(/^>\s/)) {
+        const content = lines[i].replace(/^>\s*/, '');
+        if (content.match(/^Ref:\s/)) ref = content.replace(/^Ref:\s*/, '');
+        else if (content.match(/^Similar:\s/)) similar = content.replace(/^Similar:\s*/, '');
+        else explanation += (explanation ? ' ' : '') + content;
+        i++;
+      }
+
+      quiz.questions.push({ tag: currentTag, problem: currentProblem, text: qText, options, correct, explanation, ref, similar });
+      continue;
+    }
+    i++;
+  }
+}
+
+function startQuiz() {
+  const saved = localStorage.getItem(storageKey);
+  if (saved) {
+    try { state = JSON.parse(saved); } catch(e) { state = { current:0, answers:{} }; }
+  } else {
+    state = { current:0, answers:{} };
+  }
+  document.getElementById('picker').classList.add('hidden');
+  document.getElementById('quizArea').classList.remove('hidden');
+  document.querySelector('h1').textContent = quiz.title;
+  render();
+}
+
+function save() { localStorage.setItem(storageKey, JSON.stringify(state)); }
+
+function render() {
+  const total = quiz.questions.length;
+  const answered = Object.keys(state.answers).length;
+  document.getElementById('progressText').textContent = `Questão ${state.current+1} de ${total} (${answered} respondidas)`;
+  document.getElementById('progressBar').style.width = `${(answered/total)*100}%`;
+  document.getElementById('prevBtn').disabled = state.current === 0;
+
+  const isLast = state.current === total - 1;
+  const allDone = answered === total;
+  const nextBtn = document.getElementById('nextBtn');
+  if (isLast && allDone) { nextBtn.textContent = 'Ver Resultado →'; nextBtn.onclick = showDashboard; }
+  else { nextBtn.textContent = 'Próxima →'; nextBtn.onclick = () => navigate(1); }
+
+  const q = quiz.questions[state.current];
+  const tagColor = TAG_COLORS[Object.keys(quiz.tags).indexOf(q.tag) % TAG_COLORS.length] || TAG_COLORS[0];
+  const tagLabel = quiz.tags[q.tag] || q.tag;
+  const userAns = state.answers[state.current];
+  const isAnswered = userAns !== undefined;
+
+  let html = '<div class="card">';
+  html += `<div class="card-header"><span class="badge" style="background:${tagColor}">${tagLabel}</span><span class="q-number">#${state.current+1}</span></div>`;
+  if (q.problem) html += `<div class="problem-stem">${q.problem}</div>`;
+  html += `<div class="q-text">${q.text}</div>`;
+  html += '<div class="options">';
+  q.options.forEach((opt, idx) => {
+    let cls = 'option';
+    if (isAnswered) {
+      cls += ' disabled';
+      if (idx === q.correct) cls += ' correct';
+      if (idx === userAns && userAns !== q.correct) cls += ' wrong';
+    } else if (userAns === idx) {
+      cls += ' selected';
+    }
+    html += `<div class="${cls}" onclick="selectOption(${idx})"><span class="letter">${LETTERS[idx]}</span><span>${opt}</span></div>`;
+  });
+  html += '</div>';
+
+  let expHtml = q.explanation;
+  if (q.ref) expHtml += `<div class="ref">📚 ${q.ref}</div>`;
+  if (q.similar) expHtml += `<div class="ref">🔗 ${q.similar}</div>`;
+  html += `<div class="explanation ${isAnswered ? 'show' : ''}">${expHtml}</div>`;
+  html += '</div>';
+
+  document.getElementById('questionContainer').innerHTML = html;
+  renderMath();
+}
+
+function selectOption(idx) {
+  if (state.answers[state.current] !== undefined) return;
+  state.answers[state.current] = idx;
+  save();
+  render();
+}
+
+function navigate(dir) {
+  state.current = Math.max(0, Math.min(quiz.questions.length - 1, state.current + dir));
+  save();
+  render();
+}
+
+function renderMath() {
+  renderMathInElement(document.getElementById('questionContainer'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });
+}
+
+function showDashboard() {
+  document.getElementById('quizArea').classList.add('hidden');
+  const dash = document.getElementById('dashboard');
+  dash.classList.add('show');
+
+  const total = quiz.questions.length;
+  let correctCount = 0;
+  const topicStats = {};
+  const wrongQs = [];
+
+  quiz.questions.forEach((q, i) => {
+    const tag = q.tag;
+    if (!topicStats[tag]) topicStats[tag] = { total:0, correct:0 };
+    topicStats[tag].total++;
+    if (state.answers[i] === q.correct) { correctCount++; topicStats[tag].correct++; }
+    else { wrongQs.push({ index:i, question:q, userAnswer:state.answers[i] }); }
+  });
+
+  const pct = Math.round((correctCount / total) * 100);
+  const circumference = 2 * Math.PI * 54;
+  const offset = circumference - (pct / 100) * circumference;
+  const color = pct >= 70 ? 'var(--correct)' : pct >= 50 ? 'var(--accent)' : 'var(--wrong)';
+
+  document.getElementById('scoreRing').innerHTML = `
+    <svg width="140" height="140"><circle cx="70" cy="70" r="54" stroke="var(--progress-bg)" stroke-width="12" fill="none"/>
+    <circle cx="70" cy="70" r="54" stroke="${color}" stroke-width="12" fill="none" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round"/></svg>
+    <div class="value" style="color:${color}">${pct}%</div>`;
+
+  let barsHtml = '<h3 style="margin:1.5rem 0 .8rem">Por Tópico</h3>';
+  Object.entries(topicStats).forEach(([tag, s], idx) => {
+    const tagLabel = quiz.tags[tag] || tag;
+    const tagPct = Math.round((s.correct / s.total) * 100);
+    const c = TAG_COLORS[Object.keys(quiz.tags).indexOf(tag) % TAG_COLORS.length] || TAG_COLORS[0];
+    barsHtml += `<div class="topic-bar"><div class="label"><span>${tagLabel}</span><span>${s.correct}/${s.total} (${tagPct}%)</span></div><div class="bar"><div class="fill" style="width:${tagPct}%;background:${c}"></div></div></div>`;
+  });
+  document.getElementById('topicBars').innerHTML = barsHtml;
+
+  let wrongHtml = '';
+  if (wrongQs.length) {
+    wrongHtml = '<h3 style="margin-bottom:.8rem">Questões Erradas</h3>';
+    wrongQs.forEach(w => {
+      wrongHtml += `<div class="card"><strong>#${w.index+1}</strong> — ${w.question.text}<br><span style="color:var(--wrong)">Sua resposta: ${LETTERS[w.userAnswer]}</span> · <span style="color:var(--correct)">Correta: ${LETTERS[w.question.correct]}</span><br><small style="color:var(--text-muted)">${w.question.explanation}</small></div>`;
+    });
+  }
+  document.getElementById('wrongList').innerHTML = wrongHtml;
+  renderMathInElement(dash, { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false });
+}
+
+function exportResults() {
+  const results = {
+    quiz: quiz.title,
+    date: new Date().toISOString(),
+    total: quiz.questions.length,
+    correct: quiz.questions.filter((q,i) => state.answers[i] === q.correct).length,
+    byTopic: {},
+    wrong: []
+  };
+  quiz.questions.forEach((q, i) => {
+    const tag = quiz.tags[q.tag] || q.tag;
+    if (!results.byTopic[tag]) results.byTopic[tag] = { total:0, correct:0 };
+    results.byTopic[tag].total++;
+    if (state.answers[i] === q.correct) results.byTopic[tag].correct++;
+    else results.wrong.push({ q: i+1, topic: tag, text: q.text, your: LETTERS[state.answers[i]], correct: LETTERS[q.correct] });
+  });
+  navigator.clipboard.writeText(JSON.stringify(results, null, 2)).then(() => alert('Resultado copiado!'));
+}
+
+function restart() {
+  localStorage.removeItem(storageKey);
+  state = { current:0, answers:{} };
+  document.getElementById('dashboard').classList.remove('show');
+  document.getElementById('picker').classList.remove('hidden');
+  document.querySelector('h1').textContent = 'Quiz';
+}
+
+function exportStandaloneHTML() {
+  if (!quizMdSource) { alert('Nenhum quiz carregado.'); return; }
+  const html = document.documentElement.outerHTML;
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const eq = doc.getElementById('embeddedQuiz');
+  if (eq) eq.textContent = '\n' + quizMdSource + '\n';
+  const es = doc.getElementById('embeddedState');
+  if (es) es.textContent = '\n' + JSON.stringify(state) + '\n';
+  const pickerEl = doc.getElementById('picker');
+  if (pickerEl) pickerEl.classList.add('hidden');
+  const blob = new Blob(['<!DOCTYPE html>\n' + doc.documentElement.outerHTML], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (quiz.title || 'quiz').replace(/[^a-zA-Z0-9À-ÿ\s-]/g,'').replace(/\s+/g,'-').toLowerCase() + '.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+
+
+<use-chat-gpt-ai id="USE_CHAT_GPT_AI_ROOT" class="close" data-version="8.37.2" style="transition: 0.1s ease-in-out;"></use-chat-gpt-ai><use-chat-gpt-ai-content-menu id="USE_CHAT_GPT_AI_ROOT_Context_Menu"></use-chat-gpt-ai-content-menu><use-chat-gpt-ai id="maxai-global-popup-container" translate="no"></use-chat-gpt-ai><max-ai-minimum-app id="USE_CHAT_GPT_AI_ROOT_Minimize_Container" data-version="8.37.2"></max-ai-minimum-app><div id="MAXAI_SNACKBAR_CONTAINER" style="z-index: 2147483647; color: rgb(255, 255, 255); position: absolute;"><span></span></div></body></html>
