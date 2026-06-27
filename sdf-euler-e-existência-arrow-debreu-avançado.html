@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+:root {
+  --bg: #1a1a2e;
+  --bg-card: #16213e;
+  --bg-card-hover: #1a2744;
+  --text: #e0e0e0;
+  --text-muted: #8892a4;
+  --accent: #4fc3f7;
+  --accent-dim: #2a6a8a;
+  --correct: #66bb6a;
+  --correct-bg: rgba(102,187,106,0.12);
+  --wrong: #ef5350;
+  --wrong-bg: rgba(239,83,80,0.12);
+  --border: #2a3a5c;
+  --option-bg: #1e2d4a;
+  --option-hover: #253a5e;
+  --progress-bg: #0f1a30;
+  --tag-colors: #4fc3f7 #ab47bc #ff7043 #66bb6a #ffa726 #ec407a #26c6da;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+.container { max-width:800px; margin:0 auto; padding:1.5rem; }
+h1 { text-align:center; margin-bottom:.5rem; font-size:1.6rem; color:var(--accent); }
+.subtitle { text-align:center; color:var(--text-muted); margin-bottom:1.5rem; font-size:.9rem; }
+
+/* File picker */
+.picker { background:var(--bg-card); border:2px dashed var(--border); border-radius:12px; padding:2.5rem; text-align:center; cursor:pointer; transition:border-color .2s; margin-bottom:1.5rem; }
+.picker:hover { border-color:var(--accent); }
+.picker input { display:none; }
+.picker p { color:var(--text-muted); margin-top:.5rem; font-size:.85rem; }
+
+/* Progress */
+.progress-wrap { background:var(--progress-bg); border-radius:8px; height:8px; margin-bottom:1.5rem; overflow:hidden; }
+.progress-bar { height:100%; background:linear-gradient(90deg,var(--accent),#ab47bc); border-radius:8px; transition:width .4s ease; }
+.progress-text { text-align:center; color:var(--text-muted); font-size:.85rem; margin-bottom:1rem; }
+
+/* Question card */
+.card { background:var(--bg-card); border-radius:12px; padding:1.5rem; margin-bottom:1.2rem; border:1px solid var(--border); }
+.card-header { display:flex; align-items:center; gap:.6rem; margin-bottom:1rem; flex-wrap:wrap; }
+.badge { padding:.2rem .7rem; border-radius:20px; font-size:.75rem; font-weight:600; color:#fff; }
+.q-number { color:var(--text-muted); font-size:.85rem; }
+.q-text { font-size:1.05rem; line-height:1.6; margin-bottom:1.2rem; }
+.problem-stem { background:rgba(79,195,247,0.06); border-left:3px solid var(--accent); padding:.8rem 1rem; border-radius:0 8px 8px 0; margin-bottom:1rem; line-height:1.6; }
+
+/* Options */
+.options { display:flex; flex-direction:column; gap:.5rem; }
+.option { display:flex; align-items:flex-start; gap:.7rem; padding:.75rem 1rem; background:var(--option-bg); border:1px solid transparent; border-radius:8px; cursor:pointer; transition:all .15s; line-height:1.5; }
+.option:hover:not(.disabled) { background:var(--option-hover); border-color:var(--accent-dim); }
+.option.disabled { cursor:default; }
+.option .letter { flex-shrink:0; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:var(--border); font-weight:700; font-size:.85rem; }
+.option.selected .letter { background:var(--accent); color:var(--bg); }
+.option.correct { border-color:var(--correct); background:var(--correct-bg); }
+.option.correct .letter { background:var(--correct); color:#fff; }
+.option.wrong { border-color:var(--wrong); background:var(--wrong-bg); }
+.option.wrong .letter { background:var(--wrong); color:#fff; }
+
+/* Explanation */
+.explanation { margin-top:1rem; padding:1rem; background:rgba(79,195,247,0.06); border-radius:8px; border-left:3px solid var(--accent); display:none; line-height:1.6; font-size:.95rem; }
+.explanation.show { display:block; }
+.explanation .ref { color:var(--text-muted); font-size:.85rem; margin-top:.5rem; font-style:italic; }
+
+/* Navigation */
+.nav { display:flex; justify-content:space-between; margin-top:1rem; }
+.btn { padding:.6rem 1.4rem; border:none; border-radius:8px; font-size:.9rem; cursor:pointer; font-weight:600; transition:opacity .15s; }
+.btn:hover { opacity:.85; }
+.btn-primary { background:var(--accent); color:var(--bg); }
+.btn-secondary { background:var(--border); color:var(--text); }
+
+/* Dashboard */
+.dashboard { display:none; }
+.dashboard.show { display:block; }
+.score-ring { width:140px; height:140px; margin:1rem auto; position:relative; }
+.score-ring svg { transform:rotate(-90deg); }
+.score-ring .value { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:1.8rem; font-weight:700; }
+.topic-bar { margin:.4rem 0; }
+.topic-bar .label { display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:.2rem; }
+.topic-bar .bar { height:10px; background:var(--progress-bg); border-radius:5px; overflow:hidden; }
+.topic-bar .bar .fill { height:100%; border-radius:5px; transition:width .6s; }
+.wrong-list { margin-top:1.5rem; }
+.wrong-list .card { border-left:3px solid var(--wrong); }
+.export-btn { margin-top:1rem; text-align:center; }
+
+.hidden { display:none; }
+</style>
+<meta name="maxai-mui-classname-prefix" content="injectDocumentStart-2026-06-27T14:21:30.506Z"><script src="chrome-extension://mhnlakgilnojmhinhkckjpncpbhabphi/apps/content-scripts/website/maxai.js"></script><style id="_goober"> .go1475592160{height:0;}.go1671063245{height:auto;}.go1888806478{display:flex;flex-wrap:wrap;flex-grow:1;}@media (min-width:600px){.go1888806478{flex-grow:initial;min-width:288px;}}.go167266335{background-color:#313131;font-size:0.875rem;line-height:1.43;letter-spacing:0.01071em;color:#fff;align-items:center;padding:6px 16px;border-radius:4px;box-shadow:0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12);}.go3162094071{padding-left:20px;}.go3844575157{background-color:#313131;}.go1725278324{background-color:#43a047;}.go3651055292{background-color:#d32f2f;}.go4215275574{background-color:#ff9800;}.go1930647212{background-color:#2196f3;}.go946087465{display:flex;align-items:center;padding:8px 0;}.go703367398{display:flex;align-items:center;margin-left:auto;padding-left:16px;margin-right:-8px;}.go3963613292{width:100%;position:relative;transform:translateX(0);top:0;right:0;bottom:0;left:0;min-width:288px;}.go1141946668{box-sizing:border-box;display:flex;max-height:100%;position:fixed;z-index:1400;height:auto;width:auto;transition:top 300ms ease 0ms,right 300ms ease 0ms,bottom 300ms ease 0ms,left 300ms ease 0ms,max-width 300ms ease 0ms;pointer-events:none;max-width:calc(100% - 40px);}.go1141946668 .notistack-CollapseWrapper{padding:6px 0px;transition:padding 300ms ease 0ms;}@media (max-width:599.95px){.go1141946668{width:100%;max-width:calc(100% - 32px);}}.go3868796639 .notistack-CollapseWrapper{padding:2px 0px;}.go3118922589{top:14px;flex-direction:column;}.go1453831412{bottom:14px;flex-direction:column-reverse;}.go4027089540{left:20px;}@media (min-width:600px){.go4027089540{align-items:flex-start;}}@media (max-width:599.95px){.go4027089540{left:16px;}}.go2989568495{right:20px;}@media (min-width:600px){.go2989568495{align-items:flex-end;}}@media (max-width:599.95px){.go2989568495{right:16px;}}.go4034260886{left:50%;transform:translateX(-50%);}@media (min-width:600px){.go4034260886{align-items:center;}}</style><link id="USE_CHAT_GPT_AI_CONTENT_CSS_LINK_TAG" rel="stylesheet" href="chrome-extension://mhnlakgilnojmhinhkckjpncpbhabphi/content.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&amp;display=swap"><style type="text/css">.transform-component-module_wrapper__SPB86 {
+  position: relative;
+  width: -moz-fit-content;
+  width: fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  overflow: hidden;
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none;
+  margin: 0;
+  padding: 0;
+}
+.transform-component-module_content__FBWxo {
+  display: flex;
+  flex-wrap: wrap;
+  width: -moz-fit-content;
+  width: fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  margin: 0;
+  padding: 0;
+  transform-origin: 0% 0%;
+}
+.transform-component-module_content__FBWxo img {
+  pointer-events: none;
+}
+</style></head>
+<body>
+<div class="container">
+  <h1>SDF, Euler e Existência — Arrow-Debreu (avançado)</h1>
+  <p class="subtitle">Selecione um arquivo .md para começar • <code>python -m http.server</code></p>
+
+  <div class="picker hidden" id="picker" style="">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg>
+    <p>Clique ou arraste um arquivo .md de quiz</p>
+    <input type="file" id="fileInput" accept=".md">
+  </div>
+
+  <script type="text/quiz" id="embeddedQuiz">
+---
+quiz: "SDF, Euler e Existência — Arrow-Debreu (avançado)"
+tags:
+  sdf: "SDF e precificação"
+  euler: "Equação de Euler intertemporal"
+  existencia: "Existência: Brouwer e Kakutani"
+  falha: "Onde a existência falha"
+  incompletos: "Eficiência restrita (GP, Hart)"
+  macro: "Aplicações macro-finanças"
+---
+
+## sdf
+
+Q: O fator de desconto estocástico $m_s$ tende a ser alto exatamente:
+- Nos estados bons, em que o consumo já se encontra bem abundante
+- Nos estados de maior probabilidade objetiva atribuída pelo agente
+- Nos estados com o maior payoff agregado de toda a economia
+- Nos estados ruins, em que a utilidade marginal do consumo é alta
+<!-- YW5zOjM= -->
+> O SDF carrega a utilidade marginal relativa: vale mais um real entregue no estado ruim (onde $v'$ é alta). Por isso claims que pagam no mau estado são caros — embutem um prêmio de seguro.
+> Ref: Aula 6 Bloco 4 "SDF"; MWG §19.E
+
+Q: Pela equação fundamental, o preço de um ativo $j$ com payoffs $X_{js}$ é:
+- $q_j=\sum_s \pi_s m_s X_{js}$ (payoff esperado ponderado pelo SDF)
+- $q_j=\sum_s \pi_s X_{js}$ (payoff esperado sob probabilidades objetivas)
+- $q_j=\sum_s m_s X_{js}$ (payoff somado sem ponderar por probabilidade)
+- $q_j=\max_s m_s X_{js}$ (maior payoff descontado entre os estados)
+<!-- YW5zOjA= -->
+> Preço $=$ valor esperado do payoff ponderado pelo SDF. Como $q_s=\pi_s m_s$, isso equivale a $q_j=\sum_s q_s X_{js}$ — a fórmula de não-arbitragem.
+> Ref: Aula 6 Bloco 4 "SDF + Euler"
+
+Q: As probabilidades neutras ao risco $\tilde\pi_s$ são definidas como:
+- $\tilde\pi_s=\pi_s\, m_s$ (probabilidade vezes o fator de desconto)
+- $\tilde\pi_s=\pi_s/\sum_k \pi_k$ (probabilidades objetivas renormalizadas)
+- $\tilde\pi_s=q_s/\sum_k q_k$ (preços de estado normalizados a somar 1)
+- $\tilde\pi_s=m_s/\sum_k m_k$ (fatores de desconto simplesmente normalizados)
+<!-- YW5zOjI= -->
+> A medida neutra ao risco reescala os preços de estado para somarem 1; precifica como se o agente fosse neutro, descontando à taxa livre de risco. Equivale a $\pi_s m_s/\sum_k \pi_k m_k$.
+> Ref: Aula 6 Bloco 4; precificação por não-arbitragem
+
+Q: A taxa bruta livre de risco $R_f$ implícita nos preços de estado é:
+- $R_f=\sum_s q_s$ (a própria soma dos preços de estado da economia)
+- $R_f=\sum_s \pi_s$ (a soma das probabilidades objetivas dos estados)
+- $R_f=\sum_s \pi_s\, m_s^2$ (segundo momento do SDF sob a medida física)
+- $R_f=1/\sum_s q_s$ (inverso do preço do título que paga 1 em todo estado)
+<!-- YW5zOjM= -->
+> O título sem risco paga 1 em todo estado, logo custa $\sum_s q_s$; seu retorno bruto é o inverso, $R_f=1/\sum_s q_s$. Sob preços justos, $\sum_s q_s=\sum_s \pi_s=1$ e $R_f=1$.
+> Ref: Aula 6 Bloco 4
+
+Q: Preços atuarialmente justos ($q_s=\pi_s$) correspondem a um SDF que é:
+- Crescente nos estados ruins, refletindo uma forte aversão ao risco
+- Constante entre estados, refletindo neutralidade ao risco na precificação
+- Decrescente na probabilidade do estado, refletindo puro otimismo
+- Nulo no estado livre de risco, refletindo ausência de desconto
+<!-- YW5zOjE= -->
+> $q_s=\pi_s$ significa $m_s=q_s/\pi_s=1$ constante: nenhum estado é descontado de forma diferenciada, exatamente a precificação neutra ao risco.
+> Ref: Aula 5 Bloco 2; Aula 6 Bloco 4
+
+## euler
+
+Q: Na equação de Euler intertemporal, o SDF entre $t$ e $t+1$ é:
+- $m_{t+1}=u'(c_t)/u'(c_{t+1})$ (razão invertida das utilidades, sem desconto)
+- $m_{t+1}=\beta\, u'(c_t)$ (utilidade marginal corrente descontada por $\beta$)
+- $m_{t+1}=\beta\, R_{t+1}$ (retorno bruto descontado pelo fator $\beta$)
+- $m_{t+1}=\beta\, u'(c_{t+1})/u'(c_t)$ (TMS intertemporal descontada por $\beta$)
+<!-- YW5zOjM= -->
+> O SDF intertemporal é a taxa marginal de substituição entre consumo de hoje e de amanhã, descontada pela impaciência $\beta$. É a versão dinâmica de $m_s=v'(c_s)/\lambda$.
+> Ref: Aula 6 Bloco 4 "Equação de Euler intertemporal"
+
+Q: A condição que precifica qualquer retorno bruto $R_{t+1}$ é:
+- $1=\E_t[m_{t+1}\, R_{t+1}]$ (custo de poupar igual ao benefício esperado)
+- $1=\E_t[m_{t+1}]\cdot\E_t[R_{t+1}]$ (produto das esperanças, ignora covariância)
+- $R_f=\E_t[m_{t+1}\, R_{t+1}]$ (taxa livre de risco igual ao valor esperado)
+- $0=\E_t[m_{t+1}+R_{t+1}]$ (soma esperada do SDF com o retorno é nula)
+<!-- YW5zOjA= -->
+> A condição de Euler $1=\E_t[m_{t+1}R_{t+1}]$ vale para todo ativo: o custo marginal de poupar uma unidade iguala o benefício esperado descontado pelo SDF.
+> Ref: Aula 6 Bloco 4
+
+Q: Na lógica do SDF, o prêmio de risco de um ativo decorre de:
+- Sua variância total, independentemente da correlação com o consumo
+- Sua probabilidade de retorno positivo no período seguinte
+- Sua covariância negativa com o fator de desconto estocástico
+- Seu retorno médio descontado pela inflação esperada do período
+<!-- YW5zOjI= -->
+> De $1=\E[mR]$ vem $\E[R]-R_f=-R_f\,\mathrm{Cov}(m,R)$: ativos com covariância negativa com o SDF (pagam pouco no estado ruim, caro) exigem retorno esperado maior.
+> Ref: Aula 6 Bloco 4
+
+## existencia
+
+Q: O Teorema de Brouwer basta para a existência de equilíbrio quando:
+- O excesso de demanda agregada é uma correspondência de valores convexos
+- O excesso de demanda agregada é uma função contínua dos preços
+- As preferências são lineares e a demanda resulta multivalorada
+- A economia tem um agente representativo com utilidade quaselinear
+<!-- YW5zOjE= -->
+> Brouwer é um ponto fixo para funções contínuas do simplex nele mesmo; serve quando a demanda é função. Se a demanda é correspondência, precisa-se de Kakutani.
+> Ref: Aula 6 Bloco 1 "Brouwer (1911)"
+
+Q: A demanda agregada vira uma correspondência (e não função) quando:
+- As preferências não são estritamente convexas (indiferenças planas ou com bico)
+- As preferências são estritamente convexas e diferenciáveis (demanda única)
+- A economia tem um único bem físico negociado (escolha trivial)
+- As dotações são interiores e estritamente positivas (orçamento regular)
+<!-- YW5zOjA= -->
+> Sem convexidade estrita, a cesta ótima pode ser um conjunto (segmentos de indiferença), tornando a demanda multivalorada — daí a necessidade de Kakutani.
+> Ref: Aula 6 Bloco 1 "Quando Brouwer falha — Kakutani"
+
+Q: Para aplicar Kakutani à correspondência de excesso de demanda, ela deve ter:
+- Valores sempre unitários e variação linear nos preços de mercado
+- Valores não-vazios, convexos e compactos, com gráfico fechado
+- Continuidade de Lipschitz e derivada limitada em toda parte
+- Monotonicidade estrita em cada uma das coordenadas de preço
+<!-- YW5zOjE= -->
+> Kakutani estende Brouwer a correspondências de valor não-vazio, convexo e compacto, com gráfico fechado (semicontinuidade superior) — condições satisfeitas pelo excesso de demanda.
+> Ref: Aula 6 Bloco 1 "Kakutani"
+
+Q: A condição de fronteira (desejabilidade) na prova de existência serve para:
+- Garantir que a demanda seja diferenciável no interior do simplex
+- Manter os preços de equilíbrio estritamente positivos
+- Assegurar que o núcleo da economia de trocas seja não-vazio
+- Tornar o excesso de demanda homogêneo de grau um nos preços
+<!-- YW5zOjE= -->
+> Quando algum preço tende a zero a demanda explode (bem desejável), empurrando o ponto fixo para o interior — assim o equilíbrio tem todos os preços estritamente positivos.
+> Ref: Aula 6 Bloco 1 "Sketch — existência em economia AD"
+
+## falha
+
+Q: A existência de equilíbrio walrasiano pode falhar quando:
+- As preferências são contínuas, convexas e localmente não saciadas
+- Existe um título de Arrow negociável para cada estado da natureza
+- O excesso de demanda satisfaz a Lei de Walras e a homogeneidade
+- Há não-convexidades relevantes nas preferências ou na produção
+<!-- YW5zOjM= -->
+> Não-convexidades quebram a hipótese de valores convexos de Kakutani; sem ela, o ponto fixo pode não existir e o equilíbrio pode falhar.
+> Ref: Aula 6 Bloco 1 "Onde existência pode falhar"
+
+Q: A hipótese de sobrevivência (ponto mais barato) é necessária porque:
+- Sem ela, o núcleo da economia de trocas se torna automaticamente vazio
+- Ela garante que todos os agentes da economia sejam avessos ao risco
+- Ela impõe que os preços de estado somem exatamente um no simplex
+- Sem dotação interior, a demanda pode ser descontínua no orçamento
+<!-- YW5zOjM= -->
+> Se o agente não consegue ficar abaixo de sua restrição (sem ponto mais barato), a demanda pode saltar na fronteira, quebrando a continuidade exigida na prova.
+> Ref: Aula 6 Bloco 1
+
+## incompletos
+
+Q: Em mercados incompletos, o equilíbrio é, no melhor caso:
+- Pareto-eficiente pleno, exatamente como em mercados completos
+- Estritamente ineficiente, sem nenhuma noção possível de otimalidade
+- Constrained Pareto-eficiente, eficiente só dado o span de ativos
+- Eficiente em sentido forte, via transferências lump-sum adequadas
+<!-- YW5zOjI= -->
+> Dado o conjunto limitado de ativos, o melhor alcançável é a eficiência "restrita" a esse span; em geral há perda relativa ao ótimo de mercados completos.
+> Ref: Aula 6 Bloco 3 "constrained PE"
+
+Q: Geanakoplos-Polemarchakis (1986) mostraram que, em mercados incompletos:
+- O equilíbrio é genericamente nem mesmo constrained-eficiente
+- O equilíbrio é Pareto-eficiente pleno, como em AD completo
+- A adição de ativos jamais altera o bem-estar dos agentes
+- A Lei de Walras deixa de valer no comércio sequencial
+<!-- YW5zOjA= -->
+> Mesmo um planejador restrito ao mesmo span de ativos costuma conseguir melhorar o bem-estar: o equilíbrio incompleto é, genericamente, constrained-ineficiente.
+> Ref: Aula 6 Bloco 3 "Geanakoplos-Polemarchakis (1986)"
+
+Q: O resultado de Hart (1975) sobre abrir um novo mercado de ativos é que ele:
+- Eleva o bem-estar de todos, por ampliar o conjunto de seguros
+- Não tem efeito algum, pois o equilíbrio já era Pareto-eficiente
+- Pode reduzir o bem-estar de todos, mudando preços relativos dos ativos
+- Restaura a completude e os dois Teoremas do Bem-Estar Social
+<!-- YW5zOjI= -->
+> Como o equilíbrio incompleto não é eficiente, efeitos de preço de segunda ordem ao adicionar um ativo podem prejudicar a todos — a intuição "mais mercados, melhor" falha.
+> Ref: Aula 6 Bloco 3 "Hart (1975)"
+
+## macro
+
+Q: Interpretar a SELIC como um "SDF macro" é vê-la como:
+- A taxa que desconta fluxos futuros na precificação de ativos
+- O preço de um seguro específico contra o estado de recessão
+- A probabilidade objetiva do estado de alta inflação futura
+- O prêmio de risco exigido pelo investidor marginal do mercado
+<!-- YW5zOjA= -->
+> A taxa básica funciona como o desconto agregado que precifica fluxos futuros — o análogo macro do fator de desconto que precifica ativos contingentes.
+> Ref: Aula 6 Bloco 4 "Box Brasil — SELIC como SDF macro"
+
+Q: Ver o VIX como "preço de Arrow do estado de stress" significa que ele mede:
+- A probabilidade física de ocorrer uma crise no próximo período
+- Quanto custa um claim que paga justamente nos estados ruins de mercado
+- O retorno médio esperado da carteira de mercado no período
+- A taxa livre de risco ajustada pela inflação corrente da economia
+<!-- YW5zOjE= -->
+> Um VIX alto reflete preço alto para proteção contra estados ruins — exatamente o preço de Arrow elevado desses estados, onde a utilidade marginal é alta.
+> Ref: Aula 6 Bloco 4 "Box Mundo — VIX"
+
+Q: O Tesouro IPCA+ aproxima um ativo contingente porque seu payoff real:
+- É fixo e idêntico em todos os possíveis estados da natureza
+- Independe por completo de qualquer estado futuro da economia
+- É indexado ao estado da natureza dado pela inflação realizada
+- Paga no estado específico de deflação observada no período
+<!-- YW5zOjI= -->
+> Ao corrigir pelo IPCA, o título entrega um payoff real que depende do estado inflacionário realizado — um passo concreto rumo a bens contingentes ao estado.
+> Ref: Aula 6 Bloco 3 "Box Brasil — Tesouro IPCA+"
+
+</script>
+  <script type="text/quiz-state" id="embeddedState">
+{"current":0,"answers":{}}
+</script>
+
+  <div id="quizArea" class="">
+    <div class="progress-text" id="progressText">Questão 1 de 20 (0 respondidas)</div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width: 0%;"></div></div>
+    <div id="questionContainer"><div class="card"><div class="card-header"><span class="badge" style="background:#4fc3f7">sdf</span><span class="q-number">#1</span></div><div class="q-text">O fator de desconto estocástico <span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mi>s</mi></msub></mrow><annotation encoding="application/x-tex">m_s</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.5806em; vertical-align: -0.15em;"></span><span class="mord"><span class="mord mathnormal">m</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.1514em;"><span class="" style="top: -2.55em; margin-left: 0em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span></span></span></span></span> tende a ser alto exatamente:
+</div><div class="options"><div class="option" onclick="selectOption(0)"><span class="letter">A</span><span>Nos estados bons, em que o consumo já se encontra bem abundante
+</span></div><div class="option" onclick="selectOption(1)"><span class="letter">B</span><span>Nos estados de maior probabilidade objetiva atribuída pelo agente
+</span></div><div class="option" onclick="selectOption(2)"><span class="letter">C</span><span>Nos estados com o maior payoff agregado de toda a economia
+</span></div><div class="option" onclick="selectOption(3)"><span class="letter">D</span><span>Nos estados ruins, em que a utilidade marginal do consumo é alta
+</span></div></div><div class="explanation ">O SDF carrega a utilidade marginal relativa: vale mais um real entregue no estado ruim (onde <span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>v</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msup></mrow><annotation encoding="application/x-tex">v'</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.7519em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right: 0.0359em;">v</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height: 0.7519em;"><span class="" style="top: -3.063em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span></span></span></span></span></span></span></span></span> é alta). Por isso claims que pagam no mau estado são caros — embutem um prêmio de seguro.
+<div class="ref">📚 Aula 6 Bloco 4 "SDF"; MWG §19.E
+</div></div></div></div>
+    <div class="nav">
+      <button class="btn btn-secondary" id="prevBtn" onclick="navigate(-1)" disabled="">← Anterior</button>
+      <button class="btn btn-secondary" onclick="exportStandaloneHTML()" title="Exportar como HTML independente" style="font-size:.8rem;padding:.5rem .8rem;">💾 HTML</button>
+      <button class="btn btn-primary" id="nextBtn" onclick="navigate(1)">Próxima →</button>
+    </div>
+  </div>
+
+  <div class="dashboard" id="dashboard">
+    <h2 style="text-align:center;margin-bottom:1rem;">Resultado Final</h2>
+    <div class="score-ring" id="scoreRing"></div>
+    <div id="topicBars"></div>
+    <div class="wrong-list" id="wrongList"></div>
+    <div class="export-btn">
+      <button class="btn btn-primary" onclick="exportResults()">📋 Copiar resultado (JSON)</button>
+      <button class="btn btn-secondary" onclick="exportStandaloneHTML()" style="margin-left:.5rem;">💾 Exportar HTML</button>
+      <button class="btn btn-secondary" onclick="restart()" style="margin-left:.5rem;">↻ Reiniciar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LETTERS = 'ABCDEFGHIJ';
+const TAG_COLORS = ['#4fc3f7','#ab47bc','#ff7043','#66bb6a','#ffa726','#ec407a','#26c6da','#78909c'];
+let quiz = { title:'', tags:{}, questions:[] };
+let state = { current:0, answers:{} };
+let storageKey = '';
+
+let quizMdSource = '';
+
+const picker = document.getElementById('picker');
+const fileInput = document.getElementById('fileInput');
+picker.addEventListener('click', () => fileInput.click());
+picker.addEventListener('dragover', e => { e.preventDefault(); picker.style.borderColor='var(--accent)'; });
+picker.addEventListener('dragleave', () => { picker.style.borderColor=''; });
+picker.addEventListener('drop', e => { e.preventDefault(); picker.style.borderColor=''; if(e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => { if(e.target.files[0]) loadFile(e.target.files[0]); });
+
+function loadFile(file) {
+  storageKey = 'quiz_' + file.name;
+  const reader = new FileReader();
+  reader.onload = e => { quizMdSource = e.target.result; parseQuiz(quizMdSource); startQuiz(); };
+  reader.readAsText(file);
+}
+
+(function autoStart() {
+  const embedded = document.getElementById('embeddedQuiz');
+  const embeddedState = document.getElementById('embeddedState');
+  if (embedded && embedded.textContent.trim()) {
+    quizMdSource = embedded.textContent;
+    storageKey = 'quiz_embedded_' + quizMdSource.length;
+    parseQuiz(quizMdSource);
+    if (embeddedState && embeddedState.textContent.trim()) {
+      try { const s = JSON.parse(embeddedState.textContent); if (s.answers) state = s; } catch(e) {}
+    }
+    startQuiz();
+  }
+})();
+
+function parseQuiz(md) {
+  quiz = { title:'Quiz', tags:{}, questions:[] };
+  const fmMatch = md.match(/^---\s*\n([\s\S]*?)\n---/);
+  if (fmMatch) {
+    const fm = fmMatch[1];
+    const titleM = fm.match(/quiz:\s*"([^"]+)"/);
+    if (titleM) quiz.title = titleM[1];
+    const tagsBlock = fm.match(/tags:\s*\n((?:\s+\S.*\n)*)/);
+    if (tagsBlock) {
+      for (const line of tagsBlock[1].split('\n')) {
+        const m = line.match(/^\s+(\S+):\s*"([^"]+)"/);
+        if (m) quiz.tags[m[1]] = m[2];
+      }
+    }
+  }
+
+  const body = fmMatch ? md.slice(fmMatch[0].length) : md;
+  let currentTag = '';
+  let currentProblem = null;
+  const lines = body.split('\n');
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (line.match(/^##\s+(\S+)/)) {
+      currentTag = line.match(/^##\s+(\S+)/)[1];
+      currentProblem = null;
+      i++; continue;
+    }
+
+    if (line.match(/^P:\s*/)) {
+      let stem = line.replace(/^P:\s*/, '').trim();
+      i++;
+      while (i < lines.length && !lines[i].match(/^[QP]:\s/) && !lines[i].match(/^##\s/) && !lines[i].match(/^---/)) {
+        if (lines[i].trim()) stem += (stem ? '\n' : '') + lines[i];
+        i++;
+      }
+      currentProblem = stem || null;
+      continue;
+    }
+
+    if (line.match(/^Q:\s*/)) {
+      let qText = line.replace(/^Q:\s*/, '');
+      i++;
+      while (i < lines.length && !lines[i].match(/^-\s/) && !lines[i].match(/^<!--/) && lines[i].trim()) {
+        qText += ' ' + lines[i].trim();
+        i++;
+      }
+
+      const options = [];
+      while (i < lines.length && lines[i].match(/^-\s/)) {
+        options.push(lines[i].replace(/^-\s+/, ''));
+        i++;
+      }
+
+      let correct = 0;
+      if (i < lines.length && lines[i].match(/^<!--\s*/)) {
+        const enc = lines[i].match(/<!--\s*(\S+)\s*-->/);
+        if (enc) {
+          try { const decoded = atob(enc[1]); const m = decoded.match(/ans:(\d+)/); if(m) correct = parseInt(m[1]); } catch(e) {}
+        }
+        i++;
+      }
+
+      let explanation = '', ref = '', similar = '';
+      while (i < lines.length && lines[i].match(/^>\s/)) {
+        const content = lines[i].replace(/^>\s*/, '');
+        if (content.match(/^Ref:\s/)) ref = content.replace(/^Ref:\s*/, '');
+        else if (content.match(/^Similar:\s/)) similar = content.replace(/^Similar:\s*/, '');
+        else explanation += (explanation ? ' ' : '') + content;
+        i++;
+      }
+
+      quiz.questions.push({ tag: currentTag, problem: currentProblem, text: qText, options, correct, explanation, ref, similar });
+      continue;
+    }
+    i++;
+  }
+}
+
+function startQuiz() {
+  const saved = localStorage.getItem(storageKey);
+  if (saved) {
+    try { state = JSON.parse(saved); } catch(e) { state = { current:0, answers:{} }; }
+  } else {
+    state = { current:0, answers:{} };
+  }
+  document.getElementById('picker').classList.add('hidden');
+  document.getElementById('quizArea').classList.remove('hidden');
+  document.querySelector('h1').textContent = quiz.title;
+  render();
+}
+
+function save() { localStorage.setItem(storageKey, JSON.stringify(state)); }
+
+function render() {
+  const total = quiz.questions.length;
+  const answered = Object.keys(state.answers).length;
+  document.getElementById('progressText').textContent = `Questão ${state.current+1} de ${total} (${answered} respondidas)`;
+  document.getElementById('progressBar').style.width = `${(answered/total)*100}%`;
+  document.getElementById('prevBtn').disabled = state.current === 0;
+
+  const isLast = state.current === total - 1;
+  const allDone = answered === total;
+  const nextBtn = document.getElementById('nextBtn');
+  if (isLast && allDone) { nextBtn.textContent = 'Ver Resultado →'; nextBtn.onclick = showDashboard; }
+  else { nextBtn.textContent = 'Próxima →'; nextBtn.onclick = () => navigate(1); }
+
+  const q = quiz.questions[state.current];
+  const tagColor = TAG_COLORS[Object.keys(quiz.tags).indexOf(q.tag) % TAG_COLORS.length] || TAG_COLORS[0];
+  const tagLabel = quiz.tags[q.tag] || q.tag;
+  const userAns = state.answers[state.current];
+  const isAnswered = userAns !== undefined;
+
+  let html = '<div class="card">';
+  html += `<div class="card-header"><span class="badge" style="background:${tagColor}">${tagLabel}</span><span class="q-number">#${state.current+1}</span></div>`;
+  if (q.problem) html += `<div class="problem-stem">${q.problem}</div>`;
+  html += `<div class="q-text">${q.text}</div>`;
+  html += '<div class="options">';
+  q.options.forEach((opt, idx) => {
+    let cls = 'option';
+    if (isAnswered) {
+      cls += ' disabled';
+      if (idx === q.correct) cls += ' correct';
+      if (idx === userAns && userAns !== q.correct) cls += ' wrong';
+    } else if (userAns === idx) {
+      cls += ' selected';
+    }
+    html += `<div class="${cls}" onclick="selectOption(${idx})"><span class="letter">${LETTERS[idx]}</span><span>${opt}</span></div>`;
+  });
+  html += '</div>';
+
+  let expHtml = q.explanation;
+  if (q.ref) expHtml += `<div class="ref">📚 ${q.ref}</div>`;
+  if (q.similar) expHtml += `<div class="ref">🔗 ${q.similar}</div>`;
+  html += `<div class="explanation ${isAnswered ? 'show' : ''}">${expHtml}</div>`;
+  html += '</div>';
+
+  document.getElementById('questionContainer').innerHTML = html;
+  renderMath();
+}
+
+function selectOption(idx) {
+  if (state.answers[state.current] !== undefined) return;
+  state.answers[state.current] = idx;
+  save();
+  render();
+}
+
+function navigate(dir) {
+  state.current = Math.max(0, Math.min(quiz.questions.length - 1, state.current + dir));
+  save();
+  render();
+}
+
+function renderMath() {
+  renderMathInElement(document.getElementById('questionContainer'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });
+}
+
+function showDashboard() {
+  document.getElementById('quizArea').classList.add('hidden');
+  const dash = document.getElementById('dashboard');
+  dash.classList.add('show');
+
+  const total = quiz.questions.length;
+  let correctCount = 0;
+  const topicStats = {};
+  const wrongQs = [];
+
+  quiz.questions.forEach((q, i) => {
+    const tag = q.tag;
+    if (!topicStats[tag]) topicStats[tag] = { total:0, correct:0 };
+    topicStats[tag].total++;
+    if (state.answers[i] === q.correct) { correctCount++; topicStats[tag].correct++; }
+    else { wrongQs.push({ index:i, question:q, userAnswer:state.answers[i] }); }
+  });
+
+  const pct = Math.round((correctCount / total) * 100);
+  const circumference = 2 * Math.PI * 54;
+  const offset = circumference - (pct / 100) * circumference;
+  const color = pct >= 70 ? 'var(--correct)' : pct >= 50 ? 'var(--accent)' : 'var(--wrong)';
+
+  document.getElementById('scoreRing').innerHTML = `
+    <svg width="140" height="140"><circle cx="70" cy="70" r="54" stroke="var(--progress-bg)" stroke-width="12" fill="none"/>
+    <circle cx="70" cy="70" r="54" stroke="${color}" stroke-width="12" fill="none" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round"/></svg>
+    <div class="value" style="color:${color}">${pct}%</div>`;
+
+  let barsHtml = '<h3 style="margin:1.5rem 0 .8rem">Por Tópico</h3>';
+  Object.entries(topicStats).forEach(([tag, s], idx) => {
+    const tagLabel = quiz.tags[tag] || tag;
+    const tagPct = Math.round((s.correct / s.total) * 100);
+    const c = TAG_COLORS[Object.keys(quiz.tags).indexOf(tag) % TAG_COLORS.length] || TAG_COLORS[0];
+    barsHtml += `<div class="topic-bar"><div class="label"><span>${tagLabel}</span><span>${s.correct}/${s.total} (${tagPct}%)</span></div><div class="bar"><div class="fill" style="width:${tagPct}%;background:${c}"></div></div></div>`;
+  });
+  document.getElementById('topicBars').innerHTML = barsHtml;
+
+  let wrongHtml = '';
+  if (wrongQs.length) {
+    wrongHtml = '<h3 style="margin-bottom:.8rem">Questões Erradas</h3>';
+    wrongQs.forEach(w => {
+      wrongHtml += `<div class="card"><strong>#${w.index+1}</strong> — ${w.question.text}<br><span style="color:var(--wrong)">Sua resposta: ${LETTERS[w.userAnswer]}</span> · <span style="color:var(--correct)">Correta: ${LETTERS[w.question.correct]}</span><br><small style="color:var(--text-muted)">${w.question.explanation}</small></div>`;
+    });
+  }
+  document.getElementById('wrongList').innerHTML = wrongHtml;
+  renderMathInElement(dash, { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false });
+}
+
+function exportResults() {
+  const results = {
+    quiz: quiz.title,
+    date: new Date().toISOString(),
+    total: quiz.questions.length,
+    correct: quiz.questions.filter((q,i) => state.answers[i] === q.correct).length,
+    byTopic: {},
+    wrong: []
+  };
+  quiz.questions.forEach((q, i) => {
+    const tag = quiz.tags[q.tag] || q.tag;
+    if (!results.byTopic[tag]) results.byTopic[tag] = { total:0, correct:0 };
+    results.byTopic[tag].total++;
+    if (state.answers[i] === q.correct) results.byTopic[tag].correct++;
+    else results.wrong.push({ q: i+1, topic: tag, text: q.text, your: LETTERS[state.answers[i]], correct: LETTERS[q.correct] });
+  });
+  navigator.clipboard.writeText(JSON.stringify(results, null, 2)).then(() => alert('Resultado copiado!'));
+}
+
+function restart() {
+  localStorage.removeItem(storageKey);
+  state = { current:0, answers:{} };
+  document.getElementById('dashboard').classList.remove('show');
+  document.getElementById('picker').classList.remove('hidden');
+  document.querySelector('h1').textContent = 'Quiz';
+}
+
+function exportStandaloneHTML() {
+  if (!quizMdSource) { alert('Nenhum quiz carregado.'); return; }
+  const html = document.documentElement.outerHTML;
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const eq = doc.getElementById('embeddedQuiz');
+  if (eq) eq.textContent = '\n' + quizMdSource + '\n';
+  const es = doc.getElementById('embeddedState');
+  if (es) es.textContent = '\n' + JSON.stringify(state) + '\n';
+  const pickerEl = doc.getElementById('picker');
+  if (pickerEl) pickerEl.classList.add('hidden');
+  const blob = new Blob(['<!DOCTYPE html>\n' + doc.documentElement.outerHTML], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (quiz.title || 'quiz').replace(/[^a-zA-Z0-9À-ÿ\s-]/g,'').replace(/\s+/g,'-').toLowerCase() + '.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+
+
+<use-chat-gpt-ai id="USE_CHAT_GPT_AI_ROOT" class="close" data-version="8.37.2" style="transition: 0.1s ease-in-out;"></use-chat-gpt-ai><use-chat-gpt-ai-content-menu id="USE_CHAT_GPT_AI_ROOT_Context_Menu"></use-chat-gpt-ai-content-menu><use-chat-gpt-ai id="maxai-global-popup-container" translate="no"></use-chat-gpt-ai><max-ai-minimum-app id="USE_CHAT_GPT_AI_ROOT_Minimize_Container" data-version="8.37.2"></max-ai-minimum-app><div id="MAXAI_SNACKBAR_CONTAINER" style="z-index: 2147483647; color: rgb(255, 255, 255); position: absolute;"><span></span></div></body></html>

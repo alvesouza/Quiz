@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script><meta name="maxai-mui-classname-prefix" content="injectDocumentStart-2026-06-27T14:20:39.099Z"><script src="chrome-extension://mhnlakgilnojmhinhkckjpncpbhabphi/apps/content-scripts/website/maxai.js"></script><style id="_goober"> .go1475592160{height:0;}.go1671063245{height:auto;}.go1888806478{display:flex;flex-wrap:wrap;flex-grow:1;}@media (min-width:600px){.go1888806478{flex-grow:initial;min-width:288px;}}.go167266335{background-color:#313131;font-size:0.875rem;line-height:1.43;letter-spacing:0.01071em;color:#fff;align-items:center;padding:6px 16px;border-radius:4px;box-shadow:0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12);}.go3162094071{padding-left:20px;}.go3844575157{background-color:#313131;}.go1725278324{background-color:#43a047;}.go3651055292{background-color:#d32f2f;}.go4215275574{background-color:#ff9800;}.go1930647212{background-color:#2196f3;}.go946087465{display:flex;align-items:center;padding:8px 0;}.go703367398{display:flex;align-items:center;margin-left:auto;padding-left:16px;margin-right:-8px;}.go3963613292{width:100%;position:relative;transform:translateX(0);top:0;right:0;bottom:0;left:0;min-width:288px;}.go1141946668{box-sizing:border-box;display:flex;max-height:100%;position:fixed;z-index:1400;height:auto;width:auto;transition:top 300ms ease 0ms,right 300ms ease 0ms,bottom 300ms ease 0ms,left 300ms ease 0ms,max-width 300ms ease 0ms;pointer-events:none;max-width:calc(100% - 40px);}.go1141946668 .notistack-CollapseWrapper{padding:6px 0px;transition:padding 300ms ease 0ms;}@media (max-width:599.95px){.go1141946668{width:100%;max-width:calc(100% - 32px);}}.go3868796639 .notistack-CollapseWrapper{padding:2px 0px;}.go3118922589{top:14px;flex-direction:column;}.go1453831412{bottom:14px;flex-direction:column-reverse;}.go4027089540{left:20px;}@media (min-width:600px){.go4027089540{align-items:flex-start;}}@media (max-width:599.95px){.go4027089540{left:16px;}}.go2989568495{right:20px;}@media (min-width:600px){.go2989568495{align-items:flex-end;}}@media (max-width:599.95px){.go2989568495{right:16px;}}.go4034260886{left:50%;transform:translateX(-50%);}@media (min-width:600px){.go4034260886{align-items:center;}}</style>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+:root {
+  --bg: #1a1a2e;
+  --bg-card: #16213e;
+  --bg-card-hover: #1a2744;
+  --text: #e0e0e0;
+  --text-muted: #8892a4;
+  --accent: #4fc3f7;
+  --accent-dim: #2a6a8a;
+  --correct: #66bb6a;
+  --correct-bg: rgba(102,187,106,0.12);
+  --wrong: #ef5350;
+  --wrong-bg: rgba(239,83,80,0.12);
+  --border: #2a3a5c;
+  --option-bg: #1e2d4a;
+  --option-hover: #253a5e;
+  --progress-bg: #0f1a30;
+  --tag-colors: #4fc3f7 #ab47bc #ff7043 #66bb6a #ffa726 #ec407a #26c6da;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+.container { max-width:800px; margin:0 auto; padding:1.5rem; }
+h1 { text-align:center; margin-bottom:.5rem; font-size:1.6rem; color:var(--accent); }
+.subtitle { text-align:center; color:var(--text-muted); margin-bottom:1.5rem; font-size:.9rem; }
+
+/* File picker */
+.picker { background:var(--bg-card); border:2px dashed var(--border); border-radius:12px; padding:2.5rem; text-align:center; cursor:pointer; transition:border-color .2s; margin-bottom:1.5rem; }
+.picker:hover { border-color:var(--accent); }
+.picker input { display:none; }
+.picker p { color:var(--text-muted); margin-top:.5rem; font-size:.85rem; }
+
+/* Progress */
+.progress-wrap { background:var(--progress-bg); border-radius:8px; height:8px; margin-bottom:1.5rem; overflow:hidden; }
+.progress-bar { height:100%; background:linear-gradient(90deg,var(--accent),#ab47bc); border-radius:8px; transition:width .4s ease; }
+.progress-text { text-align:center; color:var(--text-muted); font-size:.85rem; margin-bottom:1rem; }
+
+/* Question card */
+.card { background:var(--bg-card); border-radius:12px; padding:1.5rem; margin-bottom:1.2rem; border:1px solid var(--border); }
+.card-header { display:flex; align-items:center; gap:.6rem; margin-bottom:1rem; flex-wrap:wrap; }
+.badge { padding:.2rem .7rem; border-radius:20px; font-size:.75rem; font-weight:600; color:#fff; }
+.q-number { color:var(--text-muted); font-size:.85rem; }
+.q-text { font-size:1.05rem; line-height:1.6; margin-bottom:1.2rem; }
+.problem-stem { background:rgba(79,195,247,0.06); border-left:3px solid var(--accent); padding:.8rem 1rem; border-radius:0 8px 8px 0; margin-bottom:1rem; line-height:1.6; }
+
+/* Options */
+.options { display:flex; flex-direction:column; gap:.5rem; }
+.option { display:flex; align-items:flex-start; gap:.7rem; padding:.75rem 1rem; background:var(--option-bg); border:1px solid transparent; border-radius:8px; cursor:pointer; transition:all .15s; line-height:1.5; }
+.option:hover:not(.disabled) { background:var(--option-hover); border-color:var(--accent-dim); }
+.option.disabled { cursor:default; }
+.option .letter { flex-shrink:0; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:var(--border); font-weight:700; font-size:.85rem; }
+.option.selected .letter { background:var(--accent); color:var(--bg); }
+.option.correct { border-color:var(--correct); background:var(--correct-bg); }
+.option.correct .letter { background:var(--correct); color:#fff; }
+.option.wrong { border-color:var(--wrong); background:var(--wrong-bg); }
+.option.wrong .letter { background:var(--wrong); color:#fff; }
+
+/* Explanation */
+.explanation { margin-top:1rem; padding:1rem; background:rgba(79,195,247,0.06); border-radius:8px; border-left:3px solid var(--accent); display:none; line-height:1.6; font-size:.95rem; }
+.explanation.show { display:block; }
+.explanation .ref { color:var(--text-muted); font-size:.85rem; margin-top:.5rem; font-style:italic; }
+
+/* Navigation */
+.nav { display:flex; justify-content:space-between; margin-top:1rem; }
+.btn { padding:.6rem 1.4rem; border:none; border-radius:8px; font-size:.9rem; cursor:pointer; font-weight:600; transition:opacity .15s; }
+.btn:hover { opacity:.85; }
+.btn-primary { background:var(--accent); color:var(--bg); }
+.btn-secondary { background:var(--border); color:var(--text); }
+
+/* Dashboard */
+.dashboard { display:none; }
+.dashboard.show { display:block; }
+.score-ring { width:140px; height:140px; margin:1rem auto; position:relative; }
+.score-ring svg { transform:rotate(-90deg); }
+.score-ring .value { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:1.8rem; font-weight:700; }
+.topic-bar { margin:.4rem 0; }
+.topic-bar .label { display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:.2rem; }
+.topic-bar .bar { height:10px; background:var(--progress-bg); border-radius:5px; overflow:hidden; }
+.topic-bar .bar .fill { height:100%; border-radius:5px; transition:width .6s; }
+.wrong-list { margin-top:1.5rem; }
+.wrong-list .card { border-left:3px solid var(--wrong); }
+.export-btn { margin-top:1rem; text-align:center; }
+
+.hidden { display:none; }
+</style>
+<link id="USE_CHAT_GPT_AI_CONTENT_CSS_LINK_TAG" rel="stylesheet" href="chrome-extension://mhnlakgilnojmhinhkckjpncpbhabphi/content.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&amp;display=swap"><style type="text/css">.transform-component-module_wrapper__SPB86 {
+  position: relative;
+  width: -moz-fit-content;
+  width: fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  overflow: hidden;
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none;
+  margin: 0;
+  padding: 0;
+}
+.transform-component-module_content__FBWxo {
+  display: flex;
+  flex-wrap: wrap;
+  width: -moz-fit-content;
+  width: fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  margin: 0;
+  padding: 0;
+  transform-origin: 0% 0%;
+}
+.transform-component-module_content__FBWxo img {
+  pointer-events: none;
+}
+</style></head>
+<body>
+<div class="container">
+  <h1>Arrow-Debreu e Radner — Aulas 5-6</h1>
+  <p class="subtitle">Selecione um arquivo .md para começar • <code>python -m http.server</code></p>
+
+  <div class="picker hidden" id="picker" style="">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg>
+    <p>Clique ou arraste um arquivo .md de quiz</p>
+    <input type="file" id="fileInput" accept=".md">
+  </div>
+
+  <script type="text/quiz" id="embeddedQuiz">
+---
+quiz: "Arrow-Debreu e Radner — Aulas 5-6"
+tags:
+  risco: "Utilidade esperada, risco e seguro"
+  contingentes: "Bens contingentes e R^{LS}"
+  equilibrio: "Equilíbrio AD, SDF e seguro completo"
+  existencia: "Existência e TBE estendidos"
+  radner: "Radner e comércio sequencial"
+  ativos: "Mercados de ativos e não-arbitragem"
+  incompletos: "Mercados incompletos e Hart"
+---
+
+## risco
+
+Q: Sob o axioma de von Neumann-Morgenstern, a utilidade de uma loteria é avaliada como:
+- A esperança das utilidades de Bernoulli, $\sum_s \pi_s v(c_s)$ (linear nas probabilidades)
+- A utilidade de Bernoulli do prêmio médio, $v(\sum_s \pi_s c_s)$ (linear dentro dos prêmios)
+- A soma simples das utilidades, $\sum_s v(c_s)$ (sem ponderar pelas probabilidades)
+- O maior prêmio medido em utilidade, $\max_s v(c_s)$ (critério maximin, ignora $\pi_s$)
+<!-- YW5zOjA= -->
+> A utilidade esperada é linear nas probabilidades: pondera $v(c_s)$ pelos $\pi_s$. Avaliar $v$ no prêmio esperado seria o caso de neutralidade ao risco (Jensen), não a definição geral.
+> Ref: N&S Cap 7; J-R §2.1; MWG §6.B
+
+Q: Um agente é avesso ao risco quando sua função de Bernoulli $v$ é:
+- Convexa, e então prefere a loteria justa ao valor esperado (prêmio de risco negativo)
+- Linear, e então fica indiferente entre loteria e valor esperado (prêmio de risco nulo)
+- Crescente, e então valoriza mais riqueza em qualquer cenário (sem relação com risco)
+- Côncava, e então prefere o valor esperado à loteria justa (prêmio de risco positivo)
+<!-- YW5zOjM= -->
+> Concavidade de $v$ equivale a aversão ao risco: por Jensen, $\E[v(c)]<v(\E[c])$, logo o agente paga um prêmio para trocar a loteria pelo certo. Monotonicidade (crescente) é independente da atitude ao risco.
+> Ref: N&S Cap 7; MWG §6.C
+
+Q: Diante de uma perda possível e de seguro atuarialmente justo, um agente avesso ao risco compra:
+- Cobertura parcial, retendo de propósito parte do risco residual
+- Nenhuma cobertura, pois o prêmio justo não alteraria seu bem-estar
+- Cobertura acima da perda, usando a apólice como aposta no sinistro
+- Cobertura integral, igualando a riqueza líquida nos dois estados
+<!-- YW5zOjM= -->
+> Com prêmio justo, a reta orçamentária tem inclinação igual à razão de probabilidades; a tangência com a indiferença avessa ocorre na diagonal de consumo igual — cobertura integral (o resultado de seguro completo).
+> Ref: N&S Cap 7 (Insurance), Ex. 7.4; MWG §6.C
+
+Q: Na abordagem state-preference, a "renda contingente" $(c_1,c_2)$ representa:
+- O consumo médio dos estados, ponderado pelas probabilidades
+- O prêmio de risco que se paga para evitar a loteria
+- O consumo de cada estado da natureza, tratado como bens distintos
+- A dotação certa, comum e idêntica em todos os estados
+<!-- YW5zOjI= -->
+> State-preference indexa o consumo por estado: $c_1$ e $c_2$ são bens contingentes distintos. É exatamente a porta de entrada para o espaço $\mathbb{R}^{LS}$ de Arrow-Debreu.
+> Ref: N&S Cap 7 (State-Preference, p. 232), Ex. 7.7
+
+## contingentes
+
+Q: Um "bem contingente" em Arrow-Debreu é definido como:
+- Um ativo que paga o mesmo valor em todos os estados
+- Um bem físico indexado pelo estado em que será entregue
+- Um bem cujo preço acompanha a probabilidade do estado
+- Uma promessa de entrega válida sob qualquer estado futuro
+<!-- YW5zOjE= -->
+> A mesma mercadoria em estados diferentes vira bens distintos; é a reindexação que transporta toda a teoria de equilíbrio geral para o ambiente com incerteza.
+> Ref: Aula 5 Bloco 1; N&S Cap 7; MWG §19.B
+
+Q: Com $L$ mercadorias e $S$ estados, o espaço de bens do modelo é:
+- $\mathbb{R}^{L+S}$, justapondo as mercadorias e os estados
+- $\mathbb{R}^{L}$, pois a incerteza não cria mercadorias novas
+- $\mathbb{R}^{LS}$, com uma coordenada por par mercadoria-estado
+- $\mathbb{R}^{S}$, pois apenas os estados importam ao consumo
+<!-- YW5zOjI= -->
+> Cada mercadoria passa a existir em cada estado: $L\times S$ bens contingentes. Essa multiplicação (não soma) é o que permite reaproveitar os teoremas de EG.
+> Ref: Aula 5 Bloco 1 "Estados, bens contingentes, R^{LS}"
+
+Q: Tratar o tempo como um caso particular de estado permite:
+- Eliminar de vez a necessidade de probabilidades no modelo
+- Restringir a economia a um único período de negociação
+- Tornar todos os preços independentes da data de entrega
+- Unificar incerteza e troca intertemporal no mesmo aparato
+<!-- YW5zOjM= -->
+> Indexar bens por data é formalmente o mesmo que indexá-los por estado; por isso Arrow-Debreu cobre risco e intertemporalidade com a mesma álgebra.
+> Ref: Aula 5 Bloco 1 "Tempo é caso particular de estado"
+
+## equilibrio
+
+Q: Um mercado é completo, no sentido de Arrow-Debreu, quando:
+- Todos os agentes compartilham a mesma informação completa sobre os estados
+- Os preços de cada ativo coincidem exatamente com as probabilidades dos estados
+- Não incidem quaisquer custos de transação sobre a negociação dos ativos
+- Há tantos ativos independentes quantos estados, gerando toda transferência
+<!-- YW5zOjM= -->
+> Completude é uma propriedade do span: $S$ ativos independentes (posto $=S$) tornam alcançável qualquer padrão de consumo contingente. Informação e custos são hipóteses auxiliares.
+> Ref: Aula 5 Bloco 2; MWG §19.E
+
+Q: A condição de primeira ordem da UMP com utilidade esperada e preços de Arrow $q_s$ é:
+- $v'(c_s)=\lambda$ para todo estado $s$ (utilidade marginal igual entre estados)
+- $\pi_s\, v'(c_s)=\lambda\, q_s$ para todo estado $s$ (utilidade marginal ponderada)
+- $\pi_s=\lambda\, q_s$ para todo estado $s$ (probabilidade proporcional ao preço)
+- $v'(c_s)=q_s$ para todo estado $s$ (utilidade marginal igual ao preço de estado)
+<!-- YW5zOjE= -->
+> Derivando $\sum_s \pi_s v(c_s)-\lambda(\sum_s q_s c_s-W)$ em $c_s$, a utilidade marginal ponderada pela probabilidade iguala o preço de estado vezes $\lambda$.
+> Ref: Aula 5 Bloco 2 "Equação fundamental do SDF"
+
+Q: O fator de desconto estocástico (SDF) que precifica os ativos é:
+- $m_s=\pi_s/q_s$, a probabilidade sobre o preço de estado (inverso do núcleo)
+- $m_s=q_s\,\pi_s$, o produto do preço pela probabilidade (peso conjunto)
+- $m_s=v'(c_s)$, a utilidade marginal do estado (não normalizada por $\lambda$)
+- $m_s=q_s/\pi_s$, o preço de estado sobre a probabilidade (núcleo de precificação)
+<!-- YW5zOjM= -->
+> O SDF é preço de estado por unidade de probabilidade; pela CPO, $m_s=q_s/\pi_s=v'(c_s)/\lambda$. Ele precifica qualquer ativo via $q_j=\sum_s \pi_s m_s X_{js}$.
+> Ref: Aula 5 Bloco 2; Aula 6 Bloco 4
+
+Q: Com Bernoulli côncava e preços justos ($q_s=\pi_s$), o consumo ótimo fica:
+- Crescente na probabilidade, com $c_s\propto\pi_s$ (proporcional ao risco)
+- Concentrado no estado provável, com $c_s$ máximo nele (aposta no provável)
+- Constante entre estados, com $c_s$ igual em todo $s$ (seguro completo)
+- Igual à dotação de cada estado, com $c_s=\omega_s$ (ausência de troca)
+<!-- YW5zOjI= -->
+> Preços justos na CPO dão $v'(c_s)=\lambda$ constante; por $v'$ injetora, $c_s$ é constante. O agente avesso suaviza o consumo entre estados.
+> Ref: Aula 5 Bloco 4 "Resultado canônico"; MWG §19.C
+
+Q: $v(c)=\ln c$, $\pi=(\tfrac34,\tfrac14)$, preços justos $q=(\tfrac34,\tfrac14)$ e dotação $\omega=(100,20)$. O ótimo $c^*$ é:
+- $(100,20)$
+- $(75,25)$
+- $(80,80)$
+- $(60,60)$
+<!-- YW5zOjI= -->
+> Log côncava + preços justos ⟹ $c^*$ constante. O nível vem do orçamento $q\cdot c=q\cdot\omega=\tfrac34(100)+\tfrac14(20)=80$, e como $q_1+q_2=1$, $c^*=(80,80)$.
+> Ref: Simulado 1 Q4a; Aula 5 Bloco 4
+
+## existencia
+
+Q: O Teorema de Brouwer assegura, para uma função contínua do simplex nele mesmo:
+- A unicidade do equilíbrio competitivo de preços relativos (regularidade global)
+- A existência de ao menos um ponto fixo de preços (que zera o excesso de demanda)
+- A eficiência de Pareto da alocação resultante de equilíbrio (1º Teorema)
+- A não-vacuidade do núcleo da economia de trocas (estabilidade de coalizões)
+<!-- YW5zOjE= -->
+> Continuidade sobre um compacto convexo garante $f(p^*)=p^*$; usando Walras e homogeneidade, o ponto fixo zera o excesso de demanda. Unicidade e eficiência são questões à parte.
+> Ref: Aula 6 Bloco 1 "Brouwer (1911)"
+
+Q: Passa-se de Brouwer para Kakutani precisamente quando:
+- A demanda agregada é uma correspondência, e não uma função
+- A economia analisada tem um único bem físico negociável
+- As preferências são sempre lineares nos preços de mercado
+- A incerteza desaparece por completo do ambiente do modelo
+<!-- YW5zOjA= -->
+> Sem convexidade estrita, a demanda pode ser um conjunto; Kakutani estende o ponto fixo a correspondências de valor convexo e gráfico fechado.
+> Ref: Aula 6 Bloco 1 "Quando Brouwer falha — Kakutani"
+
+Q: Em mercados completos, a validade do 1º Teorema do Bem-Estar:
+- Exige adicionalmente neutralidade ao risco (funções de Bernoulli lineares)
+- Reaproveita a prova sem incerteza (bens contingentes como comuns)
+- Restringe-se ao caso de exatamente dois estados (cardinalidade mínima)
+- Depende de probabilidades idênticas entre agentes (crenças homogêneas)
+<!-- YW5zOjE= -->
+> Bens contingentes são bens comuns em $\mathbb{R}^{LS}$; a prova do 1º TBE (com NSL) vale linha a linha. A eficiência é avaliada ex-ante.
+> Ref: Aula 5 Bloco 3 "1º TBE — prova reaproveitada"
+
+## radner
+
+Q: O equilíbrio de Radner descreve uma economia na qual:
+- Todos os contratos contingentes abrem num único leilão inicial
+- Ativos são negociados antes e bens à vista em cada estado depois
+- Não há ativos financeiros; negociam-se diretamente os bens contingentes
+- Os mercados são, por construção, mercados sem completude
+<!-- YW5zOjE= -->
+> Radner é a versão sequencial: poucas negociações de ativos seguidas de mercados spot por estado. A pergunta central é quando isso reproduz o equilíbrio AD.
+> Ref: Aula 6 Bloco 2 "Setup formal de Radner"; MWG §19.D
+
+Q: A equivalência entre Radner e Arrow-Debreu exige, essencialmente, que:
+- A matriz de payoffs dos ativos tenha posto completo (gere $\mathbb{R}^S$)
+- Exista um único ativo livre de risco a ser negociado (apenas o bond)
+- Todos os agentes sejam neutros ao risco no modelo (utilidade linear)
+- Haja no máximo dois estados possíveis da natureza (cardinalidade baixa)
+<!-- YW5zOjA= -->
+> Posto completo significa que carteiras geram todo $\mathbb{R}^S$, replicando qualquer transferência contingente; aí as restrições sequenciais equivalem à de AD.
+> Ref: Aula 6 Bloco 2 "Equivalência AD↔Radner"
+
+Q: Sob posto completo, as restrições orçamentárias sequenciais de Radner:
+- Tornam-se estritamente mais apertadas que a de AD (factível menor)
+- Permitem um consumo estritamente maior que em AD (orçamento folgado)
+- Colapsam na única restrição de Arrow-Debreu (mesma alocação)
+- Deixam de depender por completo dos preços dos ativos (preços neutros)
+<!-- YW5zOjI= -->
+> A carteira que financia qualquer plano contingente existe e custa exatamente o preço AD daquele plano; as restrições se fundem e o conjunto factível coincide.
+> Ref: Aula 6 Bloco 2 "Equivalência — sketch"
+
+Q: Com dois estados e ativos que geram $\mathbb{R}^2$, qualquer plano contingente é:
+- Replicável por uma carteira dos ativos negociados (combinação que o reproduz)
+- Atingível apenas com um título de Arrow por estado (Arrow puro exigido)
+- Impossível de financiar sem um mercado AD completo (sequencial insuficiente)
+- Indiferente aos preços dos ativos efetivamente negociados (custo nulo)
+<!-- YW5zOjA= -->
+> Span completo ($\mathbb{R}^2$) garante uma combinação de ativos que reproduz qualquer payoff $(z_1,z_2)$ — o passo de replicação da equivalência de Radner.
+> Ref: Aula 6 Bloco 2 "Réplica numérica — bond + ação"
+
+## ativos
+
+Q: Dados preços e payoffs de ativos que geram $\mathbb{R}^S$, os preços de Arrow:
+- Ficam unicamente determinados pela ausência de arbitragem (solução única)
+- Dependem das probabilidades subjetivas de cada agente (preços heterogêneos)
+- Exigem conhecer a aversão ao risco do investidor (preço preferência-dependente)
+- Só existem se houver um ativo livre de risco no mercado (numerário exigido)
+<!-- YW5zOjA= -->
+> Com posto $S$, o sistema "preço $=$ payoff $\times$ preços de estado" tem solução única; a não-arbitragem fixa os $q_s$ sem precisar de probabilidades ou preferências.
+> Ref: Aula 6 Bloco 4; precificação por não-arbitragem
+
+Q: Estados 1 e 2. Ativo X paga $(3,1)$ e custa $1{,}90$; Y paga $(1,2)$ e custa $1{,}30$. Um claim $Z=(10,30)$ vale:
+- $18$
+- $19$
+- $16$
+- $17$
+<!-- YW5zOjM= -->
+> De $3q_1+q_2=1{,}90$ e $q_1+2q_2=1{,}30$: $q_1=0{,}50,\ q_2=0{,}40$. Então $P_Z=10(0{,}50)+30(0{,}40)=17$. (18 usa a média $0{,}45$; 19 troca os estados.)
+> Ref: Simulado 3 Q3b; Aula 6 Bloco 4
+
+Q: Uma opção (ativo derivativo) é precificada, em mercado completo, por:
+- Sua probabilidade de exercício vezes o prêmio cobrado (regra atuarial)
+- A preferência de risco do comprador marginal (preço subjetivo do agente)
+- Replicação por carteira dos ativos-base e não-arbitragem (custo da réplica)
+- A taxa livre de risco aplicada ao seu valor de face (desconto determinístico)
+<!-- YW5zOjI= -->
+> Em mercado completo o payoff da opção é replicável; por não-arbitragem, seu preço é o custo da carteira replicante, independentemente de probabilidades ou de quem compra.
+> Ref: Aula 6 Bloco 4; MWG §19.E (opções)
+
+## incompletos
+
+Q: Um mercado é dito incompleto precisamente quando:
+- O posto da matriz de ativos é menor que $S$ (risco residual não-segurável)
+- Não existe nenhum ativo financeiro negociável (ausência total de ativos)
+- Há custos de transação positivos na negociação (mercado com fricção)
+- Os preços de equilíbrio simplesmente deixam de existir (não-existência)
+<!-- YW5zOjA= -->
+> Incompletude é deficiência de span (posto $<S$): faltam ativos para alcançar certos padrões de transferência, deixando risco residual não-segurável.
+> Ref: Aula 6 Bloco 3 "Mercado incompleto"
+
+Q: Hart (1975) mostrou que, em mercados incompletos, abrir um novo mercado de ativos:
+- Sempre melhora a eficiência da alocação de equilíbrio (ganho garantido)
+- Pode piorar todos os agentes, mudando preços relativos (Pareto-deterioração)
+- Nunca altera o equilíbrio nem a alocação preexistentes (neutralidade total)
+- Viola necessariamente a Lei de Walras agregada da economia (inconsistência)
+<!-- YW5zOjE= -->
+> Como o equilíbrio incompleto não é eficiente, efeitos de preço de segunda ordem ao adicionar um ativo podem prejudicar a todos (reforçado por Geanakoplos-Polemarchakis, 1986).
+> Ref: Aula 6 Bloco 3 "Hart (1975)"
+
+</script>
+  <script type="text/quiz-state" id="embeddedState">
+{"current":0,"answers":{}}
+</script>
+
+  <div id="quizArea" class="">
+    <div class="progress-text" id="progressText">Questão 1 de 24 (0 respondidas)</div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width: 0%;"></div></div>
+    <div id="questionContainer"><div class="card"><div class="card-header"><span class="badge" style="background:#4fc3f7">risco</span><span class="q-number">#1</span></div><div class="q-text">Sob o axioma de von Neumann-Morgenstern, a utilidade de uma loteria é avaliada como:
+</div><div class="options"><div class="option" onclick="selectOption(0)"><span class="letter">A</span><span>A esperança das utilidades de Bernoulli, <span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>s</mi></msub><msub><mi>π</mi><mi>s</mi></msub><mi>v</mi><mo stretchy="false">(</mo><msub><mi>c</mi><mi>s</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\sum_s \pi_s v(c_s)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1.0497em; vertical-align: -0.2997em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position: relative; top: 0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.0017em;"><span class="" style="top: -2.4003em; margin-left: 0em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.2997em;"><span class=""></span></span></span></span></span></span><span class="mspace" style="margin-right: 0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right: 0.0359em;">π</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.1514em;"><span class="" style="top: -2.55em; margin-left: -0.0359em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right: 0.0359em;">v</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.1514em;"><span class="" style="top: -2.55em; margin-left: 0em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span> (linear nas probabilidades)
+</span></div><div class="option" onclick="selectOption(1)"><span class="letter">B</span><span>A utilidade de Bernoulli do prêmio médio, <span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo stretchy="false">(</mo><msub><mo>∑</mo><mi>s</mi></msub><msub><mi>π</mi><mi>s</mi></msub><msub><mi>c</mi><mi>s</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">v(\sum_s \pi_s c_s)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1.0497em; vertical-align: -0.2997em;"></span><span class="mord mathnormal" style="margin-right: 0.0359em;">v</span><span class="mopen">(</span><span class="mop"><span class="mop op-symbol small-op" style="position: relative; top: 0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.0017em;"><span class="" style="top: -2.4003em; margin-left: 0em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.2997em;"><span class=""></span></span></span></span></span></span><span class="mspace" style="margin-right: 0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right: 0.0359em;">π</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.1514em;"><span class="" style="top: -2.55em; margin-left: -0.0359em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.1514em;"><span class="" style="top: -2.55em; margin-left: 0em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span> (linear dentro dos prêmios)
+</span></div><div class="option" onclick="selectOption(2)"><span class="letter">C</span><span>A soma simples das utilidades, <span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>s</mi></msub><mi>v</mi><mo stretchy="false">(</mo><msub><mi>c</mi><mi>s</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\sum_s v(c_s)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1.0497em; vertical-align: -0.2997em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position: relative; top: 0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.0017em;"><span class="" style="top: -2.4003em; margin-left: 0em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.2997em;"><span class=""></span></span></span></span></span></span><span class="mspace" style="margin-right: 0.1667em;"></span><span class="mord mathnormal" style="margin-right: 0.0359em;">v</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.1514em;"><span class="" style="top: -2.55em; margin-left: 0em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span> (sem ponderar pelas probabilidades)
+</span></div><div class="option" onclick="selectOption(3)"><span class="letter">D</span><span>O maior prêmio medido em utilidade, <span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi>max</mi><mo>⁡</mo></mrow><mi>s</mi></msub><mi>v</mi><mo stretchy="false">(</mo><msub><mi>c</mi><mi>s</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\max_s v(c_s)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mop"><span class="mop">max</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.1514em;"><span class="" style="top: -2.55em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span><span class="mspace" style="margin-right: 0.1667em;"></span><span class="mord mathnormal" style="margin-right: 0.0359em;">v</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.1514em;"><span class="" style="top: -2.55em; margin-left: 0em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span> (critério maximin, ignora <span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>s</mi></msub></mrow><annotation encoding="application/x-tex">\pi_s</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.5806em; vertical-align: -0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right: 0.0359em;">π</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.1514em;"><span class="" style="top: -2.55em; margin-left: -0.0359em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span></span></span></span></span>)
+</span></div></div><div class="explanation ">A utilidade esperada é linear nas probabilidades: pondera <span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo stretchy="false">(</mo><msub><mi>c</mi><mi>s</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">v(c_s)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 1em; vertical-align: -0.25em;"></span><span class="mord mathnormal" style="margin-right: 0.0359em;">v</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.1514em;"><span class="" style="top: -2.55em; margin-left: 0em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span> pelos <span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>s</mi></msub></mrow><annotation encoding="application/x-tex">\pi_s</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.5806em; vertical-align: -0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right: 0.0359em;">π</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height: 0.1514em;"><span class="" style="top: -2.55em; margin-left: -0.0359em; margin-right: 0.05em;"><span class="pstrut" style="height: 2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height: 0.15em;"><span class=""></span></span></span></span></span></span></span></span></span></span>. Avaliar <span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">v</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.4306em;"></span><span class="mord mathnormal" style="margin-right: 0.0359em;">v</span></span></span></span></span> no prêmio esperado seria o caso de neutralidade ao risco (Jensen), não a definição geral.
+<div class="ref">📚 N&amp;S Cap 7; J-R §2.1; MWG §6.B
+</div></div></div></div>
+    <div class="nav">
+      <button class="btn btn-secondary" id="prevBtn" onclick="navigate(-1)" disabled="">← Anterior</button>
+      <button class="btn btn-secondary" onclick="exportStandaloneHTML()" title="Exportar como HTML independente" style="font-size:.8rem;padding:.5rem .8rem;">💾 HTML</button>
+      <button class="btn btn-primary" id="nextBtn" onclick="navigate(1)">Próxima →</button>
+    </div>
+  </div>
+
+  <div class="dashboard" id="dashboard">
+    <h2 style="text-align:center;margin-bottom:1rem;">Resultado Final</h2>
+    <div class="score-ring" id="scoreRing"></div>
+    <div id="topicBars"></div>
+    <div class="wrong-list" id="wrongList"></div>
+    <div class="export-btn">
+      <button class="btn btn-primary" onclick="exportResults()">📋 Copiar resultado (JSON)</button>
+      <button class="btn btn-secondary" onclick="exportStandaloneHTML()" style="margin-left:.5rem;">💾 Exportar HTML</button>
+      <button class="btn btn-secondary" onclick="restart()" style="margin-left:.5rem;">↻ Reiniciar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LETTERS = 'ABCDEFGHIJ';
+const TAG_COLORS = ['#4fc3f7','#ab47bc','#ff7043','#66bb6a','#ffa726','#ec407a','#26c6da','#78909c'];
+let quiz = { title:'', tags:{}, questions:[] };
+let state = { current:0, answers:{} };
+let storageKey = '';
+
+let quizMdSource = '';
+
+const picker = document.getElementById('picker');
+const fileInput = document.getElementById('fileInput');
+picker.addEventListener('click', () => fileInput.click());
+picker.addEventListener('dragover', e => { e.preventDefault(); picker.style.borderColor='var(--accent)'; });
+picker.addEventListener('dragleave', () => { picker.style.borderColor=''; });
+picker.addEventListener('drop', e => { e.preventDefault(); picker.style.borderColor=''; if(e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => { if(e.target.files[0]) loadFile(e.target.files[0]); });
+
+function loadFile(file) {
+  storageKey = 'quiz_' + file.name;
+  const reader = new FileReader();
+  reader.onload = e => { quizMdSource = e.target.result; parseQuiz(quizMdSource); startQuiz(); };
+  reader.readAsText(file);
+}
+
+(function autoStart() {
+  const embedded = document.getElementById('embeddedQuiz');
+  const embeddedState = document.getElementById('embeddedState');
+  if (embedded && embedded.textContent.trim()) {
+    quizMdSource = embedded.textContent;
+    storageKey = 'quiz_embedded_' + quizMdSource.length;
+    parseQuiz(quizMdSource);
+    if (embeddedState && embeddedState.textContent.trim()) {
+      try { const s = JSON.parse(embeddedState.textContent); if (s.answers) state = s; } catch(e) {}
+    }
+    startQuiz();
+  }
+})();
+
+function parseQuiz(md) {
+  quiz = { title:'Quiz', tags:{}, questions:[] };
+  const fmMatch = md.match(/^---\s*\n([\s\S]*?)\n---/);
+  if (fmMatch) {
+    const fm = fmMatch[1];
+    const titleM = fm.match(/quiz:\s*"([^"]+)"/);
+    if (titleM) quiz.title = titleM[1];
+    const tagsBlock = fm.match(/tags:\s*\n((?:\s+\S.*\n)*)/);
+    if (tagsBlock) {
+      for (const line of tagsBlock[1].split('\n')) {
+        const m = line.match(/^\s+(\S+):\s*"([^"]+)"/);
+        if (m) quiz.tags[m[1]] = m[2];
+      }
+    }
+  }
+
+  const body = fmMatch ? md.slice(fmMatch[0].length) : md;
+  let currentTag = '';
+  let currentProblem = null;
+  const lines = body.split('\n');
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (line.match(/^##\s+(\S+)/)) {
+      currentTag = line.match(/^##\s+(\S+)/)[1];
+      currentProblem = null;
+      i++; continue;
+    }
+
+    if (line.match(/^P:\s*/)) {
+      let stem = line.replace(/^P:\s*/, '').trim();
+      i++;
+      while (i < lines.length && !lines[i].match(/^[QP]:\s/) && !lines[i].match(/^##\s/) && !lines[i].match(/^---/)) {
+        if (lines[i].trim()) stem += (stem ? '\n' : '') + lines[i];
+        i++;
+      }
+      currentProblem = stem || null;
+      continue;
+    }
+
+    if (line.match(/^Q:\s*/)) {
+      let qText = line.replace(/^Q:\s*/, '');
+      i++;
+      while (i < lines.length && !lines[i].match(/^-\s/) && !lines[i].match(/^<!--/) && lines[i].trim()) {
+        qText += ' ' + lines[i].trim();
+        i++;
+      }
+
+      const options = [];
+      while (i < lines.length && lines[i].match(/^-\s/)) {
+        options.push(lines[i].replace(/^-\s+/, ''));
+        i++;
+      }
+
+      let correct = 0;
+      if (i < lines.length && lines[i].match(/^<!--\s*/)) {
+        const enc = lines[i].match(/<!--\s*(\S+)\s*-->/);
+        if (enc) {
+          try { const decoded = atob(enc[1]); const m = decoded.match(/ans:(\d+)/); if(m) correct = parseInt(m[1]); } catch(e) {}
+        }
+        i++;
+      }
+
+      let explanation = '', ref = '', similar = '';
+      while (i < lines.length && lines[i].match(/^>\s/)) {
+        const content = lines[i].replace(/^>\s*/, '');
+        if (content.match(/^Ref:\s/)) ref = content.replace(/^Ref:\s*/, '');
+        else if (content.match(/^Similar:\s/)) similar = content.replace(/^Similar:\s*/, '');
+        else explanation += (explanation ? ' ' : '') + content;
+        i++;
+      }
+
+      quiz.questions.push({ tag: currentTag, problem: currentProblem, text: qText, options, correct, explanation, ref, similar });
+      continue;
+    }
+    i++;
+  }
+}
+
+function startQuiz() {
+  const saved = localStorage.getItem(storageKey);
+  if (saved) {
+    try { state = JSON.parse(saved); } catch(e) { state = { current:0, answers:{} }; }
+  } else {
+    state = { current:0, answers:{} };
+  }
+  document.getElementById('picker').classList.add('hidden');
+  document.getElementById('quizArea').classList.remove('hidden');
+  document.querySelector('h1').textContent = quiz.title;
+  render();
+}
+
+function save() { localStorage.setItem(storageKey, JSON.stringify(state)); }
+
+function render() {
+  const total = quiz.questions.length;
+  const answered = Object.keys(state.answers).length;
+  document.getElementById('progressText').textContent = `Questão ${state.current+1} de ${total} (${answered} respondidas)`;
+  document.getElementById('progressBar').style.width = `${(answered/total)*100}%`;
+  document.getElementById('prevBtn').disabled = state.current === 0;
+
+  const isLast = state.current === total - 1;
+  const allDone = answered === total;
+  const nextBtn = document.getElementById('nextBtn');
+  if (isLast && allDone) { nextBtn.textContent = 'Ver Resultado →'; nextBtn.onclick = showDashboard; }
+  else { nextBtn.textContent = 'Próxima →'; nextBtn.onclick = () => navigate(1); }
+
+  const q = quiz.questions[state.current];
+  const tagColor = TAG_COLORS[Object.keys(quiz.tags).indexOf(q.tag) % TAG_COLORS.length] || TAG_COLORS[0];
+  const tagLabel = quiz.tags[q.tag] || q.tag;
+  const userAns = state.answers[state.current];
+  const isAnswered = userAns !== undefined;
+
+  let html = '<div class="card">';
+  html += `<div class="card-header"><span class="badge" style="background:${tagColor}">${tagLabel}</span><span class="q-number">#${state.current+1}</span></div>`;
+  if (q.problem) html += `<div class="problem-stem">${q.problem}</div>`;
+  html += `<div class="q-text">${q.text}</div>`;
+  html += '<div class="options">';
+  q.options.forEach((opt, idx) => {
+    let cls = 'option';
+    if (isAnswered) {
+      cls += ' disabled';
+      if (idx === q.correct) cls += ' correct';
+      if (idx === userAns && userAns !== q.correct) cls += ' wrong';
+    } else if (userAns === idx) {
+      cls += ' selected';
+    }
+    html += `<div class="${cls}" onclick="selectOption(${idx})"><span class="letter">${LETTERS[idx]}</span><span>${opt}</span></div>`;
+  });
+  html += '</div>';
+
+  let expHtml = q.explanation;
+  if (q.ref) expHtml += `<div class="ref">📚 ${q.ref}</div>`;
+  if (q.similar) expHtml += `<div class="ref">🔗 ${q.similar}</div>`;
+  html += `<div class="explanation ${isAnswered ? 'show' : ''}">${expHtml}</div>`;
+  html += '</div>';
+
+  document.getElementById('questionContainer').innerHTML = html;
+  renderMath();
+}
+
+function selectOption(idx) {
+  if (state.answers[state.current] !== undefined) return;
+  state.answers[state.current] = idx;
+  save();
+  render();
+}
+
+function navigate(dir) {
+  state.current = Math.max(0, Math.min(quiz.questions.length - 1, state.current + dir));
+  save();
+  render();
+}
+
+function renderMath() {
+  renderMathInElement(document.getElementById('questionContainer'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false
+  });
+}
+
+function showDashboard() {
+  document.getElementById('quizArea').classList.add('hidden');
+  const dash = document.getElementById('dashboard');
+  dash.classList.add('show');
+
+  const total = quiz.questions.length;
+  let correctCount = 0;
+  const topicStats = {};
+  const wrongQs = [];
+
+  quiz.questions.forEach((q, i) => {
+    const tag = q.tag;
+    if (!topicStats[tag]) topicStats[tag] = { total:0, correct:0 };
+    topicStats[tag].total++;
+    if (state.answers[i] === q.correct) { correctCount++; topicStats[tag].correct++; }
+    else { wrongQs.push({ index:i, question:q, userAnswer:state.answers[i] }); }
+  });
+
+  const pct = Math.round((correctCount / total) * 100);
+  const circumference = 2 * Math.PI * 54;
+  const offset = circumference - (pct / 100) * circumference;
+  const color = pct >= 70 ? 'var(--correct)' : pct >= 50 ? 'var(--accent)' : 'var(--wrong)';
+
+  document.getElementById('scoreRing').innerHTML = `
+    <svg width="140" height="140"><circle cx="70" cy="70" r="54" stroke="var(--progress-bg)" stroke-width="12" fill="none"/>
+    <circle cx="70" cy="70" r="54" stroke="${color}" stroke-width="12" fill="none" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round"/></svg>
+    <div class="value" style="color:${color}">${pct}%</div>`;
+
+  let barsHtml = '<h3 style="margin:1.5rem 0 .8rem">Por Tópico</h3>';
+  Object.entries(topicStats).forEach(([tag, s], idx) => {
+    const tagLabel = quiz.tags[tag] || tag;
+    const tagPct = Math.round((s.correct / s.total) * 100);
+    const c = TAG_COLORS[Object.keys(quiz.tags).indexOf(tag) % TAG_COLORS.length] || TAG_COLORS[0];
+    barsHtml += `<div class="topic-bar"><div class="label"><span>${tagLabel}</span><span>${s.correct}/${s.total} (${tagPct}%)</span></div><div class="bar"><div class="fill" style="width:${tagPct}%;background:${c}"></div></div></div>`;
+  });
+  document.getElementById('topicBars').innerHTML = barsHtml;
+
+  let wrongHtml = '';
+  if (wrongQs.length) {
+    wrongHtml = '<h3 style="margin-bottom:.8rem">Questões Erradas</h3>';
+    wrongQs.forEach(w => {
+      wrongHtml += `<div class="card"><strong>#${w.index+1}</strong> — ${w.question.text}<br><span style="color:var(--wrong)">Sua resposta: ${LETTERS[w.userAnswer]}</span> · <span style="color:var(--correct)">Correta: ${LETTERS[w.question.correct]}</span><br><small style="color:var(--text-muted)">${w.question.explanation}</small></div>`;
+    });
+  }
+  document.getElementById('wrongList').innerHTML = wrongHtml;
+  renderMathInElement(dash, { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false });
+}
+
+function exportResults() {
+  const results = {
+    quiz: quiz.title,
+    date: new Date().toISOString(),
+    total: quiz.questions.length,
+    correct: quiz.questions.filter((q,i) => state.answers[i] === q.correct).length,
+    byTopic: {},
+    wrong: []
+  };
+  quiz.questions.forEach((q, i) => {
+    const tag = quiz.tags[q.tag] || q.tag;
+    if (!results.byTopic[tag]) results.byTopic[tag] = { total:0, correct:0 };
+    results.byTopic[tag].total++;
+    if (state.answers[i] === q.correct) results.byTopic[tag].correct++;
+    else results.wrong.push({ q: i+1, topic: tag, text: q.text, your: LETTERS[state.answers[i]], correct: LETTERS[q.correct] });
+  });
+  navigator.clipboard.writeText(JSON.stringify(results, null, 2)).then(() => alert('Resultado copiado!'));
+}
+
+function restart() {
+  localStorage.removeItem(storageKey);
+  state = { current:0, answers:{} };
+  document.getElementById('dashboard').classList.remove('show');
+  document.getElementById('picker').classList.remove('hidden');
+  document.querySelector('h1').textContent = 'Quiz';
+}
+
+function exportStandaloneHTML() {
+  if (!quizMdSource) { alert('Nenhum quiz carregado.'); return; }
+  const html = document.documentElement.outerHTML;
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const eq = doc.getElementById('embeddedQuiz');
+  if (eq) eq.textContent = '\n' + quizMdSource + '\n';
+  const es = doc.getElementById('embeddedState');
+  if (es) es.textContent = '\n' + JSON.stringify(state) + '\n';
+  const pickerEl = doc.getElementById('picker');
+  if (pickerEl) pickerEl.classList.add('hidden');
+  const blob = new Blob(['<!DOCTYPE html>\n' + doc.documentElement.outerHTML], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (quiz.title || 'quiz').replace(/[^a-zA-Z0-9À-ÿ\s-]/g,'').replace(/\s+/g,'-').toLowerCase() + '.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+
+
+<use-chat-gpt-ai id="USE_CHAT_GPT_AI_ROOT" class="close" data-version="8.37.2" style="transition: 0.1s ease-in-out;"></use-chat-gpt-ai><use-chat-gpt-ai-content-menu id="USE_CHAT_GPT_AI_ROOT_Context_Menu"></use-chat-gpt-ai-content-menu><use-chat-gpt-ai id="maxai-global-popup-container" translate="no"></use-chat-gpt-ai><max-ai-minimum-app id="USE_CHAT_GPT_AI_ROOT_Minimize_Container" data-version="8.37.2"></max-ai-minimum-app><div id="MAXAI_SNACKBAR_CONTAINER" style="z-index: 2147483647; color: rgb(255, 255, 255); position: absolute;"><span></span></div></body></html>
