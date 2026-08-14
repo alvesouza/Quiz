@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Índice</title>
+<style>
+  :root{
+    --bg:#f6f7f9;
+    --surface:#ffffff;
+    --surface-2:#f0f2f5;
+    --border:#dfe3e8;
+    --border-strong:#c8ced6;
+    --text:#161a1f;
+    --text-dim:#5b6470;
+    --text-faint:#8a929c;
+    --accent:#2f5bd8;
+    --accent-soft:#e8edfd;
+    --folder:#c98a12;
+    --folder-soft:#fdf3dd;
+    --shadow:0 1px 2px rgba(16,22,32,.06), 0 4px 14px rgba(16,22,32,.05);
+    --shadow-hover:0 2px 6px rgba(16,22,32,.09), 0 12px 28px rgba(16,22,32,.10);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e1116;
+      --surface:#161b22;
+      --surface-2:#1c222b;
+      --border:#272e38;
+      --border-strong:#39424f;
+      --text:#e8ecf1;
+      --text-dim:#a3adba;
+      --text-faint:#6e7885;
+      --accent:#7f9cff;
+      --accent-soft:#1b2440;
+      --folder:#e0a93a;
+      --folder-soft:#2a2312;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+      --shadow-hover:0 2px 6px rgba(0,0,0,.5), 0 12px 28px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e1116;
+    --surface:#161b22;
+    --surface-2:#1c222b;
+    --border:#272e38;
+    --border-strong:#39424f;
+    --text:#e8ecf1;
+    --text-dim:#a3adba;
+    --text-faint:#6e7885;
+    --accent:#7f9cff;
+    --accent-soft:#1b2440;
+    --folder:#e0a93a;
+    --folder-soft:#2a2312;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+    --shadow-hover:0 2px 6px rgba(0,0,0,.5), 0 12px 28px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+
+  header.top{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+  .brand{flex:1 1 320px;min-width:0}
+  h1{
+    margin:0 0 6px;
+    font-size:clamp(1.5rem,1.2rem + 1.4vw,2.1rem);
+    letter-spacing:-.02em;
+    font-weight:680;
+  }
+  .tagline{margin:0;color:var(--text-dim);font-size:.94rem}
+  .tagline code{
+    background:var(--surface-2);border:1px solid var(--border);border-radius:6px;
+    padding:1px 6px;font-size:.85em;
+  }
+
+  .theme-btn{
+    flex:0 0 auto;
+    background:var(--surface);color:var(--text-dim);
+    border:1px solid var(--border);border-radius:10px;
+    padding:8px 12px;font:inherit;font-size:.85rem;cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .theme-btn:hover{border-color:var(--border-strong);color:var(--text)}
+
+  .toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+  .search{position:relative;flex:1 1 300px;min-width:0}
+  .search svg{
+    position:absolute;left:13px;top:50%;transform:translateY(-50%);
+    width:16px;height:16px;color:var(--text-faint);pointer-events:none;
+  }
+  #q{
+    width:100%;padding:12px 74px 12px 38px;
+    background:var(--surface);color:var(--text);
+    border:1px solid var(--border);border-radius:11px;
+    font:inherit;font-size:.95rem;outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  #q::placeholder{color:var(--text-faint)}
+  #q:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .kbd{
+    position:absolute;right:11px;top:50%;transform:translateY(-50%);
+    color:var(--text-faint);font-size:.72rem;border:1px solid var(--border);
+    border-radius:5px;padding:2px 6px;background:var(--surface-2);
+    pointer-events:none;
+  }
+  #q:focus ~ .kbd{opacity:0}
+
+  .crumbs{
+    display:flex;align-items:center;gap:2px;flex-wrap:wrap;
+    margin:0 0 16px;font-size:.9rem;color:var(--text-dim);min-height:22px;
+  }
+  .crumbs a{
+    padding:3px 8px;border-radius:7px;color:var(--accent);
+    transition:background .15s;
+  }
+  .crumbs a:hover{background:var(--accent-soft)}
+  .crumbs .sep{color:var(--text-faint);user-select:none}
+  .crumbs .here{padding:3px 4px;color:var(--text);font-weight:560}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:14px}
+
+  .card{
+    display:flex;gap:13px;align-items:flex-start;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius);padding:15px 16px;
+    box-shadow:var(--shadow);
+    transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+    min-width:0;
+  }
+  .card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover);border-color:var(--border-strong)}
+  .card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .ico{
+    flex:0 0 auto;width:38px;height:38px;border-radius:10px;
+    display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent);
+  }
+  .ico svg{width:19px;height:19px}
+  .card.dir .ico{background:var(--folder-soft);color:var(--folder)}
+  .card.other .ico{background:var(--surface-2);color:var(--text-faint)}
+
+  .body{min-width:0;flex:1}
+  .title{
+    font-weight:600;font-size:.98rem;letter-spacing:-.01em;line-height:1.35;
+    margin:1px 0 5px;overflow-wrap:anywhere;
+  }
+  .meta{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    font-size:.775rem;color:var(--text-faint);
+  }
+  .meta .path{overflow-wrap:anywhere}
+  .tag{
+    background:var(--surface-2);border:1px solid var(--border);
+    border-radius:999px;padding:1px 8px;color:var(--text-dim);
+    font-size:.72rem;font-weight:560;letter-spacing:.01em;
+  }
+  .dot{opacity:.55}
+
+  .section-label{
+    margin:28px 0 12px;font-size:.75rem;font-weight:640;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--text-faint);
+  }
+  .section-label:first-child{margin-top:0}
+
+  .note{
+    color:var(--text-dim);font-size:.9rem;padding:28px 4px;text-align:center;
+  }
+  .note strong{color:var(--text)}
+
+  footer.status{
+    margin-top:34px;padding-top:16px;border-top:1px solid var(--border);
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    color:var(--text-faint);font-size:.8rem;
+  }
+  footer.status a{color:var(--accent)}
+  footer.status a:hover{text-decoration:underline}
+  .spacer{flex:1}
+
+  .skel{
+    height:70px;border-radius:var(--radius);
+    background:linear-gradient(90deg,var(--surface) 0%,var(--surface-2) 50%,var(--surface) 100%);
+    background-size:200% 100%;animation:sh 1.3s ease-in-out infinite;
+    border:1px solid var(--border);
+  }
+  @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important;transition-duration:.001ms !important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <h1>Quiz</h1>
+      <p class="tagline">Quizzes e simulados em HTML — clique para abrir. Navegação de pastas lida direto do repositório <code id="repo-label">alvesouza/Quiz</code>.</p>
+    </div>
+    <button class="theme-btn" id="theme-btn" type="button" aria-label="Alternar tema">
+      <span id="theme-ico">◐</span><span id="theme-txt">Tema</span>
+    </button>
+  </header>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+      </svg>
+      <input id="q" type="search" placeholder="Buscar em todo o repositório…" autocomplete="off" spellcheck="false">
+      <span class="kbd">/</span>
+    </div>
+  </div>
+
+  <nav class="crumbs" id="crumbs" aria-label="Caminho"></nav>
+
+  <main id="out">
+    <div class="grid">
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+    </div>
+  </main>
+
+  <footer class="status">
+    <span id="status">Carregando…</span>
+    <span class="spacer"></span>
+    <a id="repo-link" href="https://github.com/alvesouza/Quiz" target="_blank" rel="noopener">Ver no GitHub ↗</a>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- repo detection ------------------------------------------- */
+  var FALLBACK_REPO = { owner:"alvesouza", name:"Quiz" };
+
+  function detectRepo(){
+    var h = location.hostname || "";
+    if (/\.github\.io$/i.test(h)){
+      var owner = h.replace(/\.github\.io$/i, "");
+      var seg = location.pathname.split("/").filter(Boolean)[0];
+      var isFile = seg && /\.[a-z0-9]+$/i.test(seg);
+      return { owner: owner, name: (seg && !isFile) ? decodeURIComponent(seg) : h };
+    }
+    return FALLBACK_REPO;
+  }
+  var REPO = detectRepo();
+
+  /* ---------- offline snapshot (used if the GitHub API is unreachable) --- */
+  var SNAPSHOT = {
+    "arrow-debreu-aulas-5-6.html":41317,
+    "arrow-debreu-e-radner-aulas-5-6.html":52135,
+    "demanda-agregada-mwg-cap-4.html":156875,
+    "follow-up-demanda-agregada-gorman-smd-grandmont.html":139573,
+    "mwg-part-1a-preference-choice-classical-demand-ch-13.html":153412,
+    "mwg-part-1b-aggregate-demand-production-uncertainty-ch-46.html":168906,
+    "sdf-euler-e-existência-arrow-debreu-avançado.html":38658,
+    "simulado-sessão-1-prices-payoffs-and-the-discount-factor.html":174379
+  };
+  /* real title for each known file; unknown files get a prettified filename */
+  var TITLES = {
+    "arrow-debreu-aulas-5-6.html":"Arrow-Debreu — Aulas 5-6",
+    "arrow-debreu-e-radner-aulas-5-6.html":"Arrow-Debreu e Radner — Aulas 5-6",
+    "demanda-agregada-mwg-cap-4.html":"Demanda Agregada — MWG Cap. 4",
+    "follow-up-demanda-agregada-gorman-smd-grandmont.html":"Follow-up — Demanda Agregada (Gorman, SMD, Grandmont)",
+    "mwg-part-1a-preference-choice-classical-demand-ch-13.html":"MWG — Part 1A: Preference, Choice & Classical Demand (Ch 1–3)",
+    "mwg-part-1b-aggregate-demand-production-uncertainty-ch-46.html":"MWG — Part 1B: Aggregate Demand, Production & Uncertainty (Ch 4–6)",
+    "sdf-euler-e-existência-arrow-debreu-avançado.html":"SDF, Euler e Existência — Arrow-Debreu (avançado)",
+    "simulado-sessão-1-prices-payoffs-and-the-discount-factor.html":"Simulado — Sessão 1: Prices, Payoffs, and the Discount Factor"
+  };
+
+  /* ---------- helpers ---------------------------------------------------- */
+  var $ = function(id){ return document.getElementById(id); };
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function encPath(p){
+    return p.split("/").map(encodeURIComponent).join("/");
+  }
+  function base(p){ var i = p.lastIndexOf("/"); return i < 0 ? p : p.slice(i+1); }
+  function ext(p){ var m = /\.([a-z0-9]+)$/i.exec(p); return m ? m[1].toLowerCase() : ""; }
+
+  function prettify(name){
+    var t = name.replace(/\.[a-z0-9]+$/i, "").replace(/[-_]+/g, " ").trim();
+    return t.replace(/\S+/g, function(w){
+      if (w.length <= 3 && w === w.toUpperCase()) return w;      // MWG, SDF, CAPM
+      if (/^\d/.test(w)) return w;
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    });
+  }
+  function titleOf(path){
+    return TITLES[path] || prettify(base(path));
+  }
+  function tagOf(path){
+    var t = titleOf(path).toLowerCase();
+    if (t.indexOf("simulado") === 0 || /\bsimulado\b/.test(t)) return "Simulado";
+    if (/follow-?up/.test(t)) return "Follow-up";
+    if (/gabarito|solu[çc]|resolu/.test(t)) return "Gabarito";
+    return "Quiz";
+  }
+  function fmtSize(b){
+    if (!b && b !== 0) return "";
+    if (b < 1024) return b + " B";
+    if (b < 1048576) return Math.round(b/1024) + " KB";
+    return (b/1048576).toFixed(1) + " MB";
+  }
+
+  var ICONS = {
+    dir:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 014.5 6h4l2 2.5h7A1.5 1.5 0 0119 10v7.5a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 013 17.5z"/></svg>',
+    html:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/><path d="M9.5 12.5L8 14l1.5 1.5M14.5 12.5L16 14l-1.5 1.5"/></svg>',
+    file:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/></svg>'
+  };
+
+  /* ---------- state ------------------------------------------------------ */
+  var TREE = [];        // [{path, size, type:'blob'|'tree'}]
+  var LIVE = false;
+  var cwd  = "";
+
+  var SKIP = /^(\.|node_modules\/|_site\/)/;
+  var HIDDEN_FILES = /^(index\.html|readme\.md|license(\.md|\.txt)?|\.nojekyll|claude\.md)$/i;
+
+  /* ---------- data loading ---------------------------------------------- */
+  function api(url){
+    return fetch(url, { headers:{ "Accept":"application/vnd.github+json" } })
+      .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+  }
+
+  function loadTree(){
+    var root = "https://api.github.com/repos/" + encodeURIComponent(REPO.owner) + "/" + encodeURIComponent(REPO.name);
+    return api(root + "/git/trees/HEAD?recursive=1")
+      .catch(function(){ return api(root + "/git/trees/main?recursive=1"); })
+      .catch(function(){ return api(root + "/git/trees/master?recursive=1"); })
+      .then(function(data){
+        if (!data || !data.tree) throw new Error("sem árvore");
+        TREE = data.tree
+          .filter(function(n){ return !SKIP.test(n.path); })
+          .map(function(n){ return { path:n.path, size:n.size, type:n.type }; });
+        LIVE = true;
+        if (data.truncated) setStatus("Árvore muito grande — alguns itens podem faltar.");
+      });
+  }
+
+  function useSnapshot(reason){
+    LIVE = false;
+    TREE = Object.keys(TITLES).map(function(p){
+      return { path:p, size:SNAPSHOT[p] || 0, type:"blob" };
+    });
+    setStatus(reason + " — novos arquivos aparecem assim que a API responder");
+  }
+
+  function loadCommitDate(){
+    var root = "https://api.github.com/repos/" + encodeURIComponent(REPO.owner) + "/" + encodeURIComponent(REPO.name);
+    api(root + "/commits?per_page=1").then(function(cs){
+      if (!cs || !cs[0] || !cs[0].commit) return;
+      var d = new Date(cs[0].commit.committer.date);
+      commitTxt = " · atualizado em " +
+        d.toLocaleDateString("pt-BR", { day:"2-digit", month:"short", year:"numeric" });
+      paintStatus();
+    }).catch(function(){});
+  }
+
+  /* ---------- listing ---------------------------------------------------- */
+  function listDir(dir){
+    var prefix = dir ? dir + "/" : "";
+    var dirs = {}, files = [];
+    for (var i=0;i<TREE.length;i++){
+      var n = TREE[i];
+      if (n.path.indexOf(prefix) !== 0) continue;
+      var rest = n.path.slice(prefix.length);
+      if (!rest) continue;
+      var slash = rest.indexOf("/");
+      if (slash > -1){
+        dirs[rest.slice(0, slash)] = true;
+      } else if (n.type === "tree"){
+        dirs[rest] = true;
+      } else {
+        if (!dir && HIDDEN_FILES.test(rest)) continue;
+        files.push(n);
+      }
+    }
+    var dirList = Object.keys(dirs).sort(function(a,b){ return a.localeCompare(b, "pt-BR"); })
+      .map(function(name){ return { path: prefix + name, type:"tree" }; });
+    files.sort(function(a,b){ return base(a.path).localeCompare(base(b.path), "pt-BR"); });
+    return { dirs: dirList, files: files };
+  }
+
+  function countHtml(dir){
+    var prefix = dir + "/", n = 0;
+    for (var i=0;i<TREE.length;i++){
+      var p = TREE[i].path;
+      if (TREE[i].type !== "tree" && p.indexOf(prefix) === 0 && ext(p) === "html") n++;
+    }
+    return n;
+  }
+
+  function search(query){
+    var q = query.toLowerCase().split(/\s+/).filter(Boolean);
+    return TREE.filter(function(n){
+      if (n.type === "tree") return false;
+      if (HIDDEN_FILES.test(base(n.path))) return false;
+      var hay = (n.path + " " + titleOf(n.path)).toLowerCase();
+      for (var i=0;i<q.length;i++) if (hay.indexOf(q[i]) < 0) return false;
+      return true;
+    }).sort(function(a,b){
+      var ha = ext(a.path) === "html", hb = ext(b.path) === "html";
+      if (ha !== hb) return ha ? -1 : 1;
+      return a.path.localeCompare(b.path, "pt-BR");
+    });
+  }
+
+  /* ---------- rendering -------------------------------------------------- */
+  function cardDir(node){
+    var name = base(node.path);
+    var n = countHtml(node.path);
+    return '<a class="card dir" href="#/' + encPath(node.path) + '">' +
+             '<span class="ico">' + ICONS.dir + '</span>' +
+             '<span class="body">' +
+               '<span class="title">' + esc(prettify(name)) + '</span>' +
+               '<span class="meta"><span class="tag">Pasta</span>' +
+                 (n ? '<span class="dot">·</span><span>' + n + (n === 1 ? ' quiz' : ' quizzes') + '</span>' : '') +
+               '</span>' +
+             '</span>' +
+           '</a>';
+  }
+
+  function cardFile(node, showPath){
+    var isHtml = ext(node.path) === "html";
+    var cls = isHtml ? "card" : "card other";
+    var meta = [];
+    if (isHtml) meta.push('<span class="tag">' + esc(tagOf(node.path)) + '</span>');
+    else meta.push('<span class="tag">' + esc(ext(node.path).toUpperCase() || "Arquivo") + '</span>');
+    var where = showPath ? node.path : base(node.path);
+    meta.push('<span class="dot">·</span><span class="path">' + esc(where) + '</span>');
+    if (node.size) meta.push('<span class="dot">·</span><span>' + fmtSize(node.size) + '</span>');
+
+    return '<a class="' + cls + '" href="' + encPath(node.path) + '">' +
+             '<span class="ico">' + (isHtml ? ICONS.html : ICONS.file) + '</span>' +
+             '<span class="body">' +
+               '<span class="title">' + esc(titleOf(node.path)) + '</span>' +
+               '<span class="meta">' + meta.join("") + '</span>' +
+             '</span>' +
+           '</a>';
+  }
+
+  function renderCrumbs(){
+    var el = $("crumbs");
+    if ($("q").value.trim()){
+      el.innerHTML = '<span class="here">Resultados da busca</span>';
+      return;
+    }
+    var parts = cwd ? cwd.split("/") : [];
+    var html = parts.length
+      ? '<a href="#/">Início</a>'
+      : '<span class="here">Início</span>';
+    var acc = "";
+    for (var i=0;i<parts.length;i++){
+      acc += (acc ? "/" : "") + parts[i];
+      html += '<span class="sep">/</span>';
+      html += (i === parts.length - 1)
+        ? '<span class="here">' + esc(parts[i]) + '</span>'
+        : '<a href="#/' + encPath(acc) + '">' + esc(parts[i]) + '</a>';
+    }
+    el.innerHTML = html;
+  }
+
+  function render(){
+    renderCrumbs();
+    var out = $("out");
+    var query = $("q").value.trim();
+
+    if (query){
+      var hits = search(query);
+      if (!hits.length){
+        out.innerHTML = '<p class="note">Nada encontrado para <strong>' + esc(query) + '</strong>.</p>';
+      } else {
+        out.innerHTML = '<div class="section-label">' + hits.length +
+          (hits.length === 1 ? ' resultado' : ' resultados') + '</div><div class="grid">' +
+          hits.map(function(n){ return cardFile(n, true); }).join("") + '</div>';
+      }
+      setCount(hits.length + " de " + TREE.filter(function(n){ return n.type !== "tree"; }).length + " arquivos");
+      return;
+    }
+
+    var l = listDir(cwd);
+    var html = "";
+
+    if (cwd){
+      var up = cwd.indexOf("/") > -1 ? cwd.slice(0, cwd.lastIndexOf("/")) : "";
+      html += '<div class="grid" style="margin-bottom:14px">' +
+                '<a class="card dir" href="#/' + encPath(up) + '">' +
+                  '<span class="ico">' + ICONS.dir + '</span>' +
+                  '<span class="body"><span class="title">.. voltar</span>' +
+                  '<span class="meta"><span class="path">' + esc(up || "raiz") + '</span></span></span>' +
+                '</a></div>';
+    }
+
+    if (l.dirs.length){
+      html += '<div class="section-label">Pastas</div><div class="grid">' +
+              l.dirs.map(cardDir).join("") + '</div>';
+    }
+
+    var htmls = l.files.filter(function(n){ return ext(n.path) === "html"; });
+    var others = l.files.filter(function(n){ return ext(n.path) !== "html"; });
+
+    if (htmls.length){
+      html += '<div class="section-label">' + (cwd ? esc(base(cwd)) : "Quizzes") +
+              ' · ' + htmls.length + '</div><div class="grid">' +
+              htmls.map(function(n){ return cardFile(n, false); }).join("") + '</div>';
+    }
+    if (others.length){
+      html += '<div class="section-label">Outros arquivos</div><div class="grid">' +
+              others.map(function(n){ return cardFile(n, false); }).join("") + '</div>';
+    }
+    if (!html){
+      html = '<p class="note">Pasta vazia.</p>';
+    }
+    out.innerHTML = html;
+
+    var total = 0;
+    for (var i=0;i<TREE.length;i++) if (TREE[i].type !== "tree" && ext(TREE[i].path) === "html") total++;
+    setCount(total + (total === 1 ? " quiz no repositório" : " quizzes no repositório"));
+  }
+
+  /* ---------- status line ------------------------------------------------ */
+  var statusExtra = "", commitTxt = "";
+  function setStatus(msg){ statusExtra = msg; paintStatus(); }
+  var countTxt = "";
+  function setCount(t){ countTxt = t; paintStatus(); }
+  function paintStatus(){
+    var bits = [];
+    if (countTxt) bits.push(esc(countTxt));
+    bits.push(LIVE ? 'lido ao vivo do GitHub' : 'lista local');
+    if (statusExtra) bits.push(esc(statusExtra));
+    $("status").innerHTML = bits.join(' <span class="dot">·</span> ') +
+      '<span id="last-commit">' + esc(commitTxt) + '</span>';
+  }
+
+  /* ---------- routing ---------------------------------------------------- */
+  function readHash(){
+    var h = decodeURIComponent(location.hash.replace(/^#\/?/, ""));
+    cwd = h.replace(/^\/+|\/+$/g, "");
+  }
+  window.addEventListener("hashchange", function(){
+    readHash();
+    if ($("q").value){ $("q").value = ""; }
+    render();
+    window.scrollTo({ top:0, behavior:"smooth" });
+  });
+
+  /* ---------- search input ----------------------------------------------- */
+  var t;
+  $("q").addEventListener("input", function(){
+    clearTimeout(t);
+    t = setTimeout(render, 90);
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "/" && document.activeElement !== $("q")){
+      e.preventDefault(); $("q").focus(); $("q").select();
+    } else if (e.key === "Escape" && document.activeElement === $("q")){
+      $("q").value = ""; render(); $("q").blur();
+    }
+  });
+
+  /* ---------- theme ------------------------------------------------------ */
+  var THEME_KEY = "quiz-index-theme";
+  function applyTheme(mode){
+    if (mode === "light" || mode === "dark") document.documentElement.setAttribute("data-theme", mode);
+    else document.documentElement.removeAttribute("data-theme");
+    var dark = mode === "dark" || (mode === "auto" &&
+      window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    $("theme-ico").textContent = mode === "auto" ? "◐" : (dark ? "☾" : "☀");
+    $("theme-txt").textContent = mode === "auto" ? "Auto" : (dark ? "Escuro" : "Claro");
+  }
+  var themeMode = (function(){
+    try { return localStorage.getItem(THEME_KEY) || "auto"; } catch(e){ return "auto"; }
+  })();
+  applyTheme(themeMode);
+  $("theme-btn").addEventListener("click", function(){
+    themeMode = themeMode === "auto" ? "light" : (themeMode === "light" ? "dark" : "auto");
+    try { localStorage.setItem(THEME_KEY, themeMode); } catch(e){}
+    applyTheme(themeMode);
+  });
+
+  /* ---------- boot ------------------------------------------------------- */
+  $("repo-label").textContent = REPO.owner + "/" + REPO.name;
+  $("repo-link").href = "https://github.com/" + REPO.owner + "/" + REPO.name;
+  document.title = REPO.name + " — Índice";
+
+  readHash();
+  loadTree()
+    .catch(function(err){
+      useSnapshot(/rate|403/i.test(String(err && err.message))
+        ? "limite de requisições da API do GitHub"
+        : "API do GitHub indisponível");
+    })
+    .then(function(){
+      render();
+      if (LIVE) loadCommitDate();
+    });
+})();
+</script>
+</body>
+</html>
