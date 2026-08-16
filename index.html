@@ -206,7 +206,7 @@
   <header class="top">
     <div class="brand">
       <h1>Quiz</h1>
-      <p class="tagline">Quizzes e simulados em HTML — clique para abrir. Navegação de pastas lida direto do repositório <code id="repo-label">alvesouza/Quiz</code>.</p>
+      <p class="tagline">Quizzes e simulados em Markdown — clique para responder no player. Navegação de pastas lida direto do repositório <code id="repo-label">alvesouza/Quiz</code>.</p>
     </div>
     <button class="theme-btn" id="theme-btn" type="button" aria-label="Alternar tema">
       <span id="theme-ico">◐</span><span id="theme-txt">Tema</span>
@@ -261,25 +261,29 @@
 
   /* ---------- offline snapshot (used if the GitHub API is unreachable) --- */
   var SNAPSHOT = {
-    "arrow-debreu-aulas-5-6.html":41317,
-    "arrow-debreu-e-radner-aulas-5-6.html":52135,
-    "demanda-agregada-mwg-cap-4.html":156875,
-    "follow-up-demanda-agregada-gorman-smd-grandmont.html":139573,
-    "mwg-part-1a-preference-choice-classical-demand-ch-13.html":153412,
-    "mwg-part-1b-aggregate-demand-production-uncertainty-ch-46.html":168906,
-    "sdf-euler-e-existência-arrow-debreu-avançado.html":38658,
-    "simulado-sessão-1-prices-payoffs-and-the-discount-factor.html":174379
+    "arrow-debreu-aulas-5-6.md":16469,
+    "arrow-debreu-e-radner-aulas-5-6.md":14744,
+    "demanda-agregada-mwg-cap-4.md":11631,
+    "follow-up-demanda-agregada-gorman-smd-grandmont.md":7741,
+    "mwg-part-1a-preference-choice-classical-demand-ch-13.md":18955,
+    "mwg-part-1b-aggregate-demand-production-uncertainty-ch-46.md":19470,
+    "quiz-followup-sessao-01-sdf-2026-08-16.md":33469,
+    "sdf-euler-e-existência-arrow-debreu-avançado.md":12030,
+    "simulado-sessão-1-prices-payoffs-and-the-discount-factor.md":30893
   };
-  /* real title for each known file; unknown files get a prettified filename */
+  /* Fallback titles only. For .md the real title comes from the frontmatter
+     `quiz:` line, fetched lazily (see loadMdTitles); unknown files get a
+     prettified filename. */
   var TITLES = {
-    "arrow-debreu-aulas-5-6.html":"Arrow-Debreu — Aulas 5-6",
-    "arrow-debreu-e-radner-aulas-5-6.html":"Arrow-Debreu e Radner — Aulas 5-6",
-    "demanda-agregada-mwg-cap-4.html":"Demanda Agregada — MWG Cap. 4",
-    "follow-up-demanda-agregada-gorman-smd-grandmont.html":"Follow-up — Demanda Agregada (Gorman, SMD, Grandmont)",
-    "mwg-part-1a-preference-choice-classical-demand-ch-13.html":"MWG — Part 1A: Preference, Choice & Classical Demand (Ch 1–3)",
-    "mwg-part-1b-aggregate-demand-production-uncertainty-ch-46.html":"MWG — Part 1B: Aggregate Demand, Production & Uncertainty (Ch 4–6)",
-    "sdf-euler-e-existência-arrow-debreu-avançado.html":"SDF, Euler e Existência — Arrow-Debreu (avançado)",
-    "simulado-sessão-1-prices-payoffs-and-the-discount-factor.html":"Simulado — Sessão 1: Prices, Payoffs, and the Discount Factor"
+    "arrow-debreu-aulas-5-6.md":"Arrow-Debreu — Aulas 5-6",
+    "arrow-debreu-e-radner-aulas-5-6.md":"Arrow-Debreu e Radner — Aulas 5-6",
+    "demanda-agregada-mwg-cap-4.md":"Demanda Agregada — MWG Cap. 4",
+    "follow-up-demanda-agregada-gorman-smd-grandmont.md":"Follow-up — Demanda Agregada (Gorman, SMD, Grandmont)",
+    "mwg-part-1a-preference-choice-classical-demand-ch-13.md":"MWG — Part 1A: Preference, Choice & Classical Demand (Ch 1–3)",
+    "mwg-part-1b-aggregate-demand-production-uncertainty-ch-46.md":"MWG — Part 1B: Aggregate Demand, Production & Uncertainty (Ch 4–6)",
+    "quiz-followup-sessao-01-sdf-2026-08-16.md":"Follow-up — Session 1: the four confusions (after 12/30)",
+    "sdf-euler-e-existência-arrow-debreu-avançado.md":"SDF, Euler e Existência — Arrow-Debreu (avançado)",
+    "simulado-sessão-1-prices-payoffs-and-the-discount-factor.md":"Simulado — Sessão 1: Prices, Payoffs, and the Discount Factor"
   };
 
   /* ---------- helpers ---------------------------------------------------- */
@@ -295,6 +299,24 @@
   }
   function base(p){ var i = p.lastIndexOf("/"); return i < 0 ? p : p.slice(i+1); }
   function ext(p){ var m = /\.([a-z0-9]+)$/i.exec(p); return m ? m[1].toLowerCase() : ""; }
+  function stem(p){ return p.replace(/\.[a-z0-9]+$/i, ""); }
+
+  /* A quiz is either a .md source (played through quiz.html) or a legacy
+     standalone .html export. MD wins when both exist — see dropSuperseded. */
+  function isMd(p){ return ext(p) === "md"; }
+  function isQuiz(p){ return isMd(p) || ext(p) === "html"; }
+  function hrefFor(p){ return isMd(p) ? "quiz.html#" + encPath(p) : encPath(p); }
+
+  /* stems of every .md in the repo, so a legacy .html twin can be hidden */
+  var MD_STEMS = {};
+  function indexMdStems(){
+    MD_STEMS = {};
+    for (var i=0;i<TREE.length;i++){
+      var n = TREE[i];
+      if (n.type !== "tree" && isMd(n.path) && !HIDDEN_FILES.test(base(n.path))) MD_STEMS[stem(n.path)] = true;
+    }
+  }
+  function superseded(p){ return ext(p) === "html" && MD_STEMS[stem(p)] === true; }
 
   function prettify(name){
     var t = name.replace(/\.[a-z0-9]+$/i, "").replace(/[-_]+/g, " ").trim();
@@ -304,8 +326,55 @@
       return w.charAt(0).toUpperCase() + w.slice(1);
     });
   }
+  /* Titles for .md come from the frontmatter `quiz:` line, fetched lazily and
+     cached for the session; TITLES is only the fallback. */
+  var TITLE_CACHE = (function(){
+    try { return JSON.parse(sessionStorage.getItem("quiz-md-titles") || "{}"); }
+    catch(e){ return {}; }
+  })();
+
   function titleOf(path){
-    return TITLES[path] || prettify(base(path));
+    return TITLE_CACHE[path] || TITLES[path] || prettify(base(path));
+  }
+
+  function paintTitle(path, title){
+    var els = document.querySelectorAll("[data-md]");
+    for (var i=0;i<els.length;i++){
+      if (els[i].getAttribute("data-md") !== path) continue;
+      var t = els[i].querySelector(".title");
+      if (t) t.textContent = title;
+      var tag = els[i].querySelector(".tag");
+      if (tag) tag.textContent = tagOf(path);
+    }
+  }
+
+  function loadMdTitles(){
+    var els = document.querySelectorAll("[data-md]"), queue = [], seen = {};
+    for (var i=0;i<els.length;i++){
+      var p = els[i].getAttribute("data-md");
+      if (!TITLE_CACHE[p] && !seen[p]){ seen[p] = true; queue.push(p); }
+    }
+    if (!queue.length) return;
+    var at = 0, dirty = false;
+    function next(){
+      if (at >= queue.length){
+        if (dirty){
+          dirty = false;
+          try { sessionStorage.setItem("quiz-md-titles", JSON.stringify(TITLE_CACHE)); } catch(e){}
+        }
+        return;
+      }
+      var p = queue[at++];
+      fetch(encPath(p))
+        .then(function(r){ return r.ok ? r.text() : ""; })
+        .then(function(txt){
+          var m = /^---[\s\S]{0,4000}?\bquiz:\s*"([^"]+)"/.exec(txt);
+          if (m){ TITLE_CACHE[p] = m[1]; dirty = true; paintTitle(p, m[1]); }
+        })
+        .catch(function(){})
+        .then(next);
+    }
+    for (var k=0;k<3 && k<queue.length;k++) next();   /* 3 in flight */
   }
   function tagOf(path){
     var t = titleOf(path).toLowerCase();
@@ -324,6 +393,7 @@
   var ICONS = {
     dir:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 014.5 6h4l2 2.5h7A1.5 1.5 0 0119 10v7.5a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 013 17.5z"/></svg>',
     html:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/><path d="M9.5 12.5L8 14l1.5 1.5M14.5 12.5L16 14l-1.5 1.5"/></svg>',
+    md:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/><path d="M8.5 14.5l1.8 1.8 3.4-3.6"/></svg>',
     file:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/></svg>'
   };
 
@@ -333,7 +403,8 @@
   var cwd  = "";
 
   var SKIP = /^(\.|node_modules\/|_site\/)/;
-  var HIDDEN_FILES = /^(index\.html|readme\.md|license(\.md|\.txt)?|\.nojekyll|claude\.md)$/i;
+  /* quiz.html is the player, not a quiz — it must never list as content */
+  var HIDDEN_FILES = /^(index\.html|quiz\.html|readme\.md|license(\.md|\.txt)?|\.nojekyll|claude\.md)$/i;
 
   /* ---------- data loading ---------------------------------------------- */
   function api(url){
@@ -390,7 +461,8 @@
       } else if (n.type === "tree"){
         dirs[rest] = true;
       } else {
-        if (!dir && HIDDEN_FILES.test(rest)) continue;
+        if (HIDDEN_FILES.test(rest)) continue;
+        if (superseded(n.path)) continue;   /* legacy export; the .md is listed instead */
         files.push(n);
       }
     }
@@ -400,11 +472,12 @@
     return { dirs: dirList, files: files };
   }
 
-  function countHtml(dir){
+  function countQuizzes(dir){
     var prefix = dir + "/", n = 0;
     for (var i=0;i<TREE.length;i++){
       var p = TREE[i].path;
-      if (TREE[i].type !== "tree" && p.indexOf(prefix) === 0 && ext(p) === "html") n++;
+      if (TREE[i].type !== "tree" && p.indexOf(prefix) === 0 && isQuiz(p) &&
+          !superseded(p) && !HIDDEN_FILES.test(base(p))) n++;
     }
     return n;
   }
@@ -414,11 +487,12 @@
     return TREE.filter(function(n){
       if (n.type === "tree") return false;
       if (HIDDEN_FILES.test(base(n.path))) return false;
+      if (superseded(n.path)) return false;
       var hay = (n.path + " " + titleOf(n.path)).toLowerCase();
       for (var i=0;i<q.length;i++) if (hay.indexOf(q[i]) < 0) return false;
       return true;
     }).sort(function(a,b){
-      var ha = ext(a.path) === "html", hb = ext(b.path) === "html";
+      var ha = isQuiz(a.path), hb = isQuiz(b.path);
       if (ha !== hb) return ha ? -1 : 1;
       return a.path.localeCompare(b.path, "pt-BR");
     });
@@ -427,7 +501,7 @@
   /* ---------- rendering -------------------------------------------------- */
   function cardDir(node){
     var name = base(node.path);
-    var n = countHtml(node.path);
+    var n = countQuizzes(node.path);
     return '<a class="card dir" href="#/' + encPath(node.path) + '">' +
              '<span class="ico">' + ICONS.dir + '</span>' +
              '<span class="body">' +
@@ -440,17 +514,18 @@
   }
 
   function cardFile(node, showPath){
-    var isHtml = ext(node.path) === "html";
-    var cls = isHtml ? "card" : "card other";
+    var quiz = isQuiz(node.path), md = isMd(node.path);
+    var cls = quiz ? "card" : "card other";
     var meta = [];
-    if (isHtml) meta.push('<span class="tag">' + esc(tagOf(node.path)) + '</span>');
+    if (quiz) meta.push('<span class="tag">' + esc(tagOf(node.path)) + '</span>');
     else meta.push('<span class="tag">' + esc(ext(node.path).toUpperCase() || "Arquivo") + '</span>');
     var where = showPath ? node.path : base(node.path);
     meta.push('<span class="dot">·</span><span class="path">' + esc(where) + '</span>');
     if (node.size) meta.push('<span class="dot">·</span><span>' + fmtSize(node.size) + '</span>');
 
-    return '<a class="' + cls + '" href="' + encPath(node.path) + '">' +
-             '<span class="ico">' + (isHtml ? ICONS.html : ICONS.file) + '</span>' +
+    return '<a class="' + cls + '" href="' + hrefFor(node.path) + '"' +
+             (md ? ' data-md="' + esc(node.path) + '"' : '') + '>' +
+             '<span class="ico">' + (md ? ICONS.md : (quiz ? ICONS.html : ICONS.file)) + '</span>' +
              '<span class="body">' +
                '<span class="title">' + esc(titleOf(node.path)) + '</span>' +
                '<span class="meta">' + meta.join("") + '</span>' +
@@ -494,6 +569,7 @@
           hits.map(function(n){ return cardFile(n, true); }).join("") + '</div>';
       }
       setCount(hits.length + " de " + TREE.filter(function(n){ return n.type !== "tree"; }).length + " arquivos");
+      loadMdTitles();
       return;
     }
 
@@ -515,8 +591,8 @@
               l.dirs.map(cardDir).join("") + '</div>';
     }
 
-    var htmls = l.files.filter(function(n){ return ext(n.path) === "html"; });
-    var others = l.files.filter(function(n){ return ext(n.path) !== "html"; });
+    var htmls = l.files.filter(function(n){ return isQuiz(n.path); });
+    var others = l.files.filter(function(n){ return !isQuiz(n.path); });
 
     if (htmls.length){
       html += '<div class="section-label">' + (cwd ? esc(base(cwd)) : "Quizzes") +
@@ -533,8 +609,12 @@
     out.innerHTML = html;
 
     var total = 0;
-    for (var i=0;i<TREE.length;i++) if (TREE[i].type !== "tree" && ext(TREE[i].path) === "html") total++;
+    for (var i=0;i<TREE.length;i++){
+      var tp = TREE[i].path;
+      if (TREE[i].type !== "tree" && isQuiz(tp) && !superseded(tp) && !HIDDEN_FILES.test(base(tp))) total++;
+    }
     setCount(total + (total === 1 ? " quiz no repositório" : " quizzes no repositório"));
+    loadMdTitles();
   }
 
   /* ---------- status line ------------------------------------------------ */
@@ -610,6 +690,7 @@
         : "API do GitHub indisponível");
     })
     .then(function(){
+      indexMdStems();
       render();
       if (LIVE) loadCommitDate();
     });
