@@ -150,7 +150,20 @@ fileInput.addEventListener('change', e => { if(e.target.files[0]) loadFile(e.tar
 function loadFile(file) {
   storageKey = 'quiz_' + file.name;
   const reader = new FileReader();
-  reader.onload = e => { quizMdSource = e.target.result; parseQuiz(quizMdSource); startQuiz(); };
+  reader.onload = e => {
+    quizMdSource = e.target.result;
+    parseQuiz(quizMdSource);
+    /* Without this, a file that parses to nothing starts an empty quiz that
+       shows a title over "Questão 1 de 0" — confusing and unrecoverable. */
+    if (!quiz.questions.length) {
+      quizMdSource = '';
+      pickerMessage('<strong>' + file.name.replace(/[<>&]/g, '') + '</strong> não contém questões ' +
+                    'no formato esperado (<code>Q:</code> + alternativas <code>-</code> + <code>&lt;!-- ans --&gt;</code>).<br>' +
+                    'Escolha outro arquivo .md.');
+      return;
+    }
+    startQuiz();
+  };
   reader.readAsText(file);
 }
 
